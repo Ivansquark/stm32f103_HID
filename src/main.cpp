@@ -17,9 +17,24 @@ int main()
 	InterruptSubject<EXTI0_IRQn> interruptButton;	
 	interruptButton.setInterrupt(&but);
 	interruptButton.SetVector();
+
+	Usb usb;
 	__enable_irq();	
 	while(1) {		
-		//led.toggle();
+		
+		if (usb.endpoints[0].setup_flag) {
+			usb.EnumerateSetup(0);
+		} else if (usb.endpoints[0].rx_flag) {
+		
+		} else if (usb.endpoints[1].rx_flag) {
+
+		} else if (usb.endpoints[2].rx_flag) {
+
+		} else if (usb.endpoints[3].rx_flag) {
+
+		}
+
+
 		if(uart1.wasInterruptedby1){
 			if(uart1.receivedArr[0] == 0xff) {
 				led.toggle();

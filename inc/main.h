@@ -11,6 +11,7 @@
 #include "spi2.h"
 #include "button.h"
 #include "uart.hpp"
+#include "usb_hid.hpp"
 
 //#include "modbus.h"
 
