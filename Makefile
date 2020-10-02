@@ -53,11 +53,11 @@ startup.o: lib/startup.cpp
 	
 uart.o:	src/uart.cpp	
 	$(CC) -c src/uart.cpp -o uart.o -I$(INC) -I$(LIB) $(CPPFLAGS)
-usb_hid.o: src/usb_hid.o
-	$(CC) -c src/usb_hid.o -o usb_hid.o -I$(INC) -I$(LIB) $(CPPFLAGS)
+usb_hid.o: src/usb_hid.cpp
+	$(CC) -c src/usb_hid.cpp -o usb_hid.o -I$(INC) -I$(LIB) $(CPPFLAGS)
 main.o: $(TARGET) 
 	$(CC)  -c $(TARGET) -o main.o -I$(LIB) -I$(INC) $(CPPFLAGS) 
-#	arm-none-eabi-objdump main.o -h
+	#arm-none-eabi-objdump main.o -h
 	
 clean:
-	rm -rf *.o *.elf *.lst *.bin #*.map
+	rm -rf *.o *.elf *.lst *.bin *.map

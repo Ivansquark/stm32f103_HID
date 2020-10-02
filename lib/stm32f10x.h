@@ -1284,29 +1284,33 @@ typedef struct {
 } USB_CR_BASE_def;
 
 typedef struct {
-  uint16_t value;
-  uint16_t reserved;
+  volatile uint16_t value;
+  volatile uint16_t reserved;
 } USB_EP_VALdef;
 
 typedef struct {
-  USB_EP_VALdef EPnR[8];
+  volatile USB_EP_VALdef EPnR[8];
 } USB_EP_def;
 
 typedef struct {
   volatile uint16_t USB_ADDR_TX;
+  volatile uint16_t reserved0;
   volatile uint16_t USB_COUNT_TX;
+  volatile uint16_t reserved1;
   volatile uint16_t USB_ADDR_RX;
+  volatile uint16_t reserved2;
   volatile uint16_t USB_COUNT_RX;
+  volatile uint16_t reserved3;
 } USB_EPDATA_def;
 
 typedef struct {
-  USB_EPDATA_def EP[8];
+  volatile USB_EPDATA_def EP[8];
 } USB_BTABLE_def;
 
 
 #define USB_EP ((USB_EP_def*)(USB_BASE))
 #define USB_CR ((USB_CR_BASE_def*)(USB_BASE+USB_CR_BASE))
-#define USB_BTABLE ((USB_BTABLE_def)(USB_BTABLE_BASE))
+#define USB_BTABLE ((USB_BTABLE_def*)(USB_BTABLE_BASE))
 
 
 /**

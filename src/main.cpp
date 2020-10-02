@@ -24,6 +24,7 @@ int main()
 		
 		if (usb.endpoints[0].setup_flag) {
 			usb.EnumerateSetup(0);
+			usb.endpoints[0].setup_flag=false;
 		} else if (usb.endpoints[0].rx_flag) {
 		
 		} else if (usb.endpoints[1].rx_flag) {

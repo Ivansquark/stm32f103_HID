@@ -19,10 +19,10 @@ public:
     bool wasInterruptedby1=false;
     bool wasInterruptedby2=false;
     uint8_t receivedArr[1]={0};
+    static Uart* pThis;
 private:
     void uart_init(uint8_t num);
-    uint8_t UartNum=1;
-    static Uart* pThis;
+    uint8_t UartNum=1;    
 };
 
 #endif //UART_HPP

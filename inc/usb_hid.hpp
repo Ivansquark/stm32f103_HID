@@ -3,6 +3,9 @@
 
 #include "stm32f10x.h"
 #include "usb_descriptors.hpp"
+//#include "stdint.h"
+//#include "string.h"
+#include "uart.hpp"
 
 #define CLEAR_DTOG_RX(R)       			(R & USB_EP0R_DTOG_RX) ? R : (R & (~USB_EP0R_DTOG_RX))
 #define SET_DTOG_RX(R)         			(R & USB_EP0R_DTOG_RX) ? (R & (~USB_EP0R_DTOG_RX)) : (R | USB_EP0R_DTOG_RX)
@@ -46,16 +49,20 @@ public:
         //Флаг-маркер управляющей транзакции
         bool setup_flag{0};
     };
-    ep_t endpoints[eps_number];
+    ep_t endpoints[4];
 
     #pragma pack(push, 1)
 	typedef struct setup_request
     {
-    	uint8_t bmRequestType=0; // D7 направление передачи фазы данных 0 = хост передает в устройство 1 = устройство передает на хост...
-    	uint8_t bRequest=0;	   // Запрос (2-OUT…6-SETUP)
-    	uint16_t wValue=0;	   // (Коды Запросов дескрипторов)
-    	uint16_t wIndex=0;	   //
-    	uint16_t wLength=0;	   //
+    	uint8_t bmRequestType; // D7 направление передачи фазы данных 0 = хост передает в устройство 1 = устройство передает на хост...
+    	uint8_t bRequest;	   // Запрос (2-OUT…6-SETUP)
+    	uint16_t reserved0;
+        uint16_t wValue;	   // (Коды Запросов дескрипторов)
+    	uint16_t reserved1;
+        uint16_t wIndex;	   //
+    	uint16_t reserved2;
+        uint16_t wLength;	   //
+        uint16_t reserved3;
     }USB_SETUP_req;		
 	#pragma pack(pop)
 	
@@ -70,7 +77,12 @@ public:
 	#pragma pack(pop)
 	setupP setupPack{0};
     bool AddressFlag{false};
-    void EnumerateSetup();
+    bool setLineCodingFlag{false};
+    void EnumerateSetup(uint8_t num);
+    void EP_Write(uint8_t number, uint8_t *buf, uint16_t size);
+    void EP_Read(uint8_t number, uint8_t *buf);
+    void ep0_init();
+    static Usb* pThis;
 
 private:
     void usb_init();
@@ -80,13 +92,15 @@ private:
     *   addr_tx - адрес передающего буфера в периферии USB
     *   addr_rx - адрес приемного буфера в периферии USB
     *   Размер приемного буфера - фиксированный 64 байта
-    */
-    void ep0_init();
-    static Usb* pThis;
+    */    
     void usb_receive(uint8_t epID);
+    //void cdc_get_line_coding();
+    //void cdc_set_control_line_state();
+    //void cdc_send_break();
+    //void cdc_send_encapsulated_command();
+    //void cdc_get_encapsulated_command();
     
-    static constexpr eps_number = 4;
-    static constexpr swap16(uint16_t val) {((val&0xFF)<<8)|((val>>8)&0xFF)}
+    static constexpr uint16_t swap16(uint16_t val) {return ((val&0xFF)<<8)|((val>>8)&0xFF);}
 };
 
 
