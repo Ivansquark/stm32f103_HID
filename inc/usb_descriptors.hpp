@@ -207,14 +207,14 @@ constexpr uint8_t Device_Descriptor[18] =
     static constexpr uint8_t STD_GET_DESCRIPTOR = 0x06;
     static constexpr uint8_t STD_SET_DESCRIPTOR = 0x07;
     static constexpr uint8_t STD_GET_CONFIGURATION = 0x08;
-	/*!<Драйвер в опреационной системе по окончанию энумерации посылает такой запрос>*/
+	/*!<Драйвер в операционной системе по окончанию энумерации посылает такой запрос>*/
     static constexpr uint8_t STD_SET_CONFIGURATION = 0x09; //в Value задается конфигурация в младшем байте
     static constexpr uint8_t STD_GET_INTERFACE = 0xA;
     static constexpr uint8_t STD_SET_INTERFACE = 0x11;
     static constexpr uint8_t STD_SYNCH_FRAME = 0x12;
     /*! <mValue> */
-    static constexpr uint16_t USB_DESC_TYPE_DEVICE = 0x0100;
-    static constexpr uint16_t USB_DESC_TYPE_CONFIGURATION = 0x0200;
+    static constexpr uint16_t USB_DESC_TYPE_DEVICE = 0x0001;
+    static constexpr uint16_t USB_DESC_TYPE_CONFIGURATION = 0x0002;
     //static constexpr uint16_t USB_DESC_TYPE_DEVICE_QUALIFIER = 0x0600;
 	/*<В запросах на передачу дескриптора Value содержит в старшем байте тип дескриптора, а в младшем индекс>*/
     static constexpr uint16_t USBD_IDX_LANGID_STR = 0x0300;

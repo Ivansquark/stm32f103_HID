@@ -33,11 +33,19 @@ class Usb {
 public:
     Usb();
     /*!< структура описывающая конечную точку >*/
+    struct rx_buf{
+        uint16_t rx;
+        uint16_t reserved;
+    };
+    struct tx_buf{
+        uint16_t tx;
+        uint16_t reserved;
+    };
     struct ep_t {
         //Адрес передающего буфера
-        uint16_t *tx_buf{nullptr};
+        rx_buf* r_buf{nullptr};
         //Адрес приемного буфера
-        uint16_t *rx_buf{nullptr};
+        tx_buf* t_buf{nullptr};
         //Состояние регистра USB_EPnR
         uint16_t status{0};
         //Количество принятых байт
@@ -70,12 +78,11 @@ public:
 	#pragma pack(push, 1)
 	typedef union
 	{
-		USB_SETUP_req setup; //!< размер структуры
-		uint8_t b[8];	 	 //!< массив байтов равный размеру структуры
+		USB_SETUP_req setup; //!< размер структуры		
 		uint16_t wRequest;	 //!< Слово объединяющее первые два байта структуры	
 	} setupP;    	
 	#pragma pack(pop)
-	setupP setupPack{0};
+	//setupP setupPack{0};
     bool AddressFlag{false};
     bool setLineCodingFlag{false};
     void EnumerateSetup(uint8_t num);
@@ -83,8 +90,19 @@ public:
     void EP_Read(uint8_t number, uint8_t *buf);
     void ep0_init();
     static Usb* pThis;
+    uint8_t setAddress();
+    void epWaitNull(uint8_t number);
+
+    void set_Rx_VALID(uint8_t num);
+    void set_Tx_VALID(uint8_t num);
+    void clear_Rx (uint8_t num);
+    void clear_Tx (uint8_t num);
+    void change_DTOG_Rx(uint8_t num);
+    void change_DTOG_Tx(uint8_t num);
 
 private:
+    uint8_t receiveBuf[64]={0};
+
     void usb_init();
     /*! Инициализация конечной точки
     *   number - номер (0...7)
@@ -99,8 +117,9 @@ private:
     //void cdc_send_break();
     //void cdc_send_encapsulated_command();
     //void cdc_get_encapsulated_command();
-    
+    uint8_t address=0;
     static constexpr uint16_t swap16(uint16_t val) {return ((val&0xFF)<<8)|((val>>8)&0xFF);}
+    
 };
 
 

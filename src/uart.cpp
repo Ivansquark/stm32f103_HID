@@ -86,9 +86,9 @@ void Uart::uart_init(uint8_t num) {
             USART1->CR1|=USART_CR1_RE; // Recieving enabled
             USART1->CR1|=USART_CR1_RXNEIE; //enable interrupt on Rx from usart1
             //USART1->BRR=0x445C; //2400 (APB1CLK - baudrate/2)/baudrate
-            //USART1->BRR=0xEA6; //9600    (36000-4800)/9600
-            USART1->BRR=0x1D4C; //9600    (72000-4800)/9600
-	        //USART1->BRR=0x16C; //115200
+            //USART1->BRR=0xEA6; //9600    (36000000-4800)/9600
+            //USART1->BRR=0x1D4C; //9600    (72000000-4800)/9600
+	        USART1->BRR=0x270; //115200 (72000000 - 57600)/115200
             NVIC_EnableIRQ(USART1_IRQn);
         } 
         break;
