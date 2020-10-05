@@ -3,7 +3,7 @@
 
 /* Generate a link error if heap and stack don't fit into RAM */
 _Min_Heap_Size = 0x0800;      /* required amount of heap  */
-_Min_Stack_Size = 0x0120; /* required amount of stack */
+_Min_Stack_Size = 0x0400; /* required amount of stack */
 
 
 /* Memories definition */

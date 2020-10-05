@@ -27,25 +27,7 @@ int main()
 
 	__enable_irq();	
 	while(1) {	
-		if (usb.endpoints[0].setup_flag && usb.endpoints[0].rx_flag ) {
-			usb.EnumerateSetup(0);
-			//usb.set_Rx_VALID(0);
-			usb.endpoints[0].setup_flag=false;			
-		} else if (usb.endpoints[0].rx_flag) {			
-			//Uart::pThis->sendStr("Status");
-			if(usb.AddressFlag) {				
-				usb.setAddress();
-				usb.AddressFlag = false;
-			}			
-			//usb.set_Rx_VALID(0);
-			usb.endpoints[0].rx_flag=false;
-		} else if (usb.endpoints[1].rx_flag) {
-
-		} else if (usb.endpoints[2].rx_flag) {
-
-		} else if (usb.endpoints[3].rx_flag) {
-
-		}
+		usb.process();
 		if(uart1.wasInterruptedby1){
 			if(uart1.receivedArr[0] == 0xff) {
 				led.toggle();

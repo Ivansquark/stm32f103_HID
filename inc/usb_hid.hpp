@@ -31,11 +31,11 @@ public:
         //Количество принятых байт
         uint8_t rx_cnt{0};
         //Флаг события успешной передачи
-        bool tx_flag{0};
+        volatile bool tx_flag{0};
         //Флаг события успешного приема
-        bool rx_flag{0};
+        volatile bool rx_flag{0};
         //Флаг-маркер управляющей транзакции
-        bool setup_flag{0};
+        volatile bool setup_flag{0};
     };
     ep_t endpoints[4];
 
@@ -65,12 +65,15 @@ public:
 	//setupP setupPack{0};
     bool AddressFlag{false};
     bool setLineCodingFlag{false};
+    bool bigSize{false};
+    void process();
     void EnumerateSetup(uint8_t num);
     void EP_Write(uint8_t number, uint8_t *buf, uint16_t size);
     void EP_Read(uint8_t number, uint8_t *buf);
     void ep0_init();
     static Usb* pThis;
     uint8_t setAddress();
+    void setConfiguration();
     void epWaitNull(uint8_t number);
 
     void set_Rx_VALID(uint8_t num);

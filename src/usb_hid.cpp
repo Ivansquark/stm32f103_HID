@@ -103,10 +103,11 @@ void Usb::EnumerateSetup(uint8_t num){
         }
         break;
         case SET_ADDRESS:  // Установка адреса устройства
-        Uart::pThis->sendStr("ADr\n");
+        //Uart::pThis->sendStr("ADr\n");
         address = setupPack->setup.wValue;
-        Uart::pThis->sendByte(address);
-        AddressFlag = true;            
+        //Uart::pThis->sendByte(address);
+        AddressFlag = true;   
+        return;         
         break;
 	    case GET_CONFIGURATION:
 		/*Устройство передает один байт, содержащий код конфигурации устройства*/
@@ -115,6 +116,8 @@ void Usb::EnumerateSetup(uint8_t num){
         //USART_debug::usart2_sendSTR("GET_CONFIGURATION\n");
 	    break;
         case SET_CONFIGURATION: // Установка конфигурации устройства
+        Uart::pThis->sendStr("SET_CONFIGURATION\n");
+        setConfiguration();
 	    break;       // len-0 -> ZLP
 	    case SET_INTERFACE: // Установка конфигурации устройства
 	    /*<здесь выбирается интерфейс (в данном случае не должен выбираться, т.к. разные конечные точки)>*/
@@ -145,7 +148,17 @@ void Usb::EnumerateSetup(uint8_t num){
         break;
         //stall();
     }   
-    EP_Write(0x00,pbuf,MIN(len,setupPack->setup.wLength));   // записываем в конечную точку адрес дескриптора и его размер (а также запрошенный размер)
+    uint16_t size = MIN(len,setupPack->setup.wLength);
+    if(size<=64) {
+        EP_Write(0x00,pbuf, size);   // записываем в конечную точку адрес дескриптора и его размер (а также запрошенный размер)
+    } else {        
+        EP_Write(0x00,pbuf, 64);
+        bigSize = true;
+        set_Tx_VALID(0);
+        EP_Write(0x00,pbuf, size-64);
+        bigSize = false;
+    }
+    
 }
 
 uint16_t Usb::MIN(uint16_t len, uint16_t wLength)
@@ -159,46 +172,68 @@ uint8_t Usb::setAddress() {
     USB_CR->DADDR |= address;
 }
 
+void Usb::setConfiguration() {
+    //TODO: endpoint initialization !!!
+}
+
 /*uint8_t number – номер конечной точки
 uint8_t *buf – указатель на отправляемые данные
 uint16_t size – длинна отправляемых данных
 */
 void Usb::EP_Write(uint8_t number, uint8_t *buf, uint16_t size) {
     uint8_t i;
-    uint32_t timeout = 100000;    
+    uint32_t timeout = 10000000;    
 //Ограничение на отправку данных больше 64 байт
     //if (size > 64) size = 64;
     /*!< передача 16 битных значений (записываем в буфер Tx) >*/
     uint16_t temp = (size & 0x0001) ? (size + 1) / 2 : size / 2;//если нечетный добавляем единицу
-    uint16_t* buf16 = (uint16_t *)buf;
+    uint16_t* buf16 = nullptr;
+    if(bigSize) {
+        buf16 = (uint16_t *)((uint8_t*)buf+64);
+    } else {
+        buf16 = (uint16_t *)buf;
+    }    
     for (i = 0; i < temp; i++){
         endpoints[number].t_buf[i].tx = buf16[i];
     }
     //Количество передаваемых байт в регистр
     USB_BTABLE -> EP[number].USB_COUNT_TX = 0;
     USB_BTABLE -> EP[number].USB_COUNT_TX = size;
-    //STAT_RX, DTOG_TX, DTOG_RX – оставляем, STAT_TX=VALID
-    //status = KEEP_STAT_RX(status);
-    //status = SET_VALID_RX(status);
-    //status = SET_VALID_TX(status);
-    //status = KEEP_DTOG_TX(status);
-    //status = KEEP_DTOG_RX(status);
-    //Читаем EPnR
-    //Uart::pThis->sendStr("write1\n");
-    //uint16_t status = USB_EP -> EPnR[number].value;
-    if(!size) {
-        set_DTOG_Tx(0);
-    }
     set_Tx_VALID(number);
     /*!< Ждем пока данные передадутся, в прерывании tx_flag установится в 1 >*/
-    //endpoints[number].tx_flag = 0;
-    //while (!endpoints[number].tx_flag){
-    //    if (timeout) timeout--;
-    //    else break;
-    //} 
+    endpoints[number].tx_flag = 0;
+    while (!endpoints[number].tx_flag){
+        if (timeout) timeout--;
+        else break;
+    } 
     //endpoints[0].tx_flag=false;     
     //Uart::pThis->sendStr("write2\n");
     //разрешаем прием    
+}
+
+void Usb::process() {
+    if (endpoints[0].setup_flag && endpoints[0].rx_flag ) {
+			EnumerateSetup(0);
+			set_Rx_VALID(0);
+			endpoints[0].setup_flag=false;			
+		} else if (endpoints[0].rx_flag) {			
+			//Uart::pThis->sendStr("Status");
+			if(AddressFlag) {
+				uint8_t x;
+				//usb.set_DTOG_Tx(0);
+				EP_Write(0x00,&x,0);				
+				setAddress();
+				AddressFlag = false;
+			}			
+			set_Rx_VALID(0);
+			endpoints[0].rx_flag=false;
+		} else if (endpoints[1].rx_flag) {
+
+		} else if (endpoints[2].rx_flag) {
+
+		} else if (endpoints[3].rx_flag) {
+
+		}
 }
 
 void USB_LP_CAN_RX0_IRQHandler() {
@@ -214,6 +249,7 @@ void USB_LP_CAN_RX0_IRQHandler() {
 		USB_CR -> DADDR = USB_DADDR_EF;  //enable function
         //Записываем в USB_EPnR тип и номер конечной точки. Для упрощения номер конечной точки
         //устанавливается равным  номеру USB_EPnR
+
         USB_EP -> EPnR[0].value |= USB_EP0R_EP_TYPE_0;
         USB_EP -> EPnR[0].value &=~ USB_EP0R_EP_TYPE_1; // 0:1 - control Ep
         USB_EP -> EPnR[0].value ^= (USB_EP0R_STAT_RX | USB_EP0R_STAT_TX_1); //Rx=1:1 - разрешена на прием(ACK) Tx=1:0 - NACK 
@@ -232,7 +268,8 @@ void USB_LP_CAN_RX0_IRQHandler() {
 		Usb::pThis->endpoints[n].rx_flag = (Usb::pThis->endpoints[n].status & USB_EP0R_CTR_RX) ? 1 : 0;
 		Usb::pThis->endpoints[n].setup_flag = (Usb::pThis->endpoints[n].status & USB_EP0R_SETUP) ? 1 : 0;
         Usb::pThis->endpoints[n].tx_flag = (Usb::pThis->endpoints[n].status & USB_EP0R_CTR_TX) ? 1 : 0; //конец передачи
-		//Очищаем флаги приема и передачи
+		
+        //Очищаем флаги приема и передачи
         Usb::pThis->clear_Rx(n);
         Usb::pThis->clear_Tx(n);
         //USB_EP -> EPnR[n].value = Usb::pThis->endpoints[n].status;
