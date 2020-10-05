@@ -7,26 +7,6 @@
 //#include "string.h"
 #include "uart.hpp"
 
-#define CLEAR_DTOG_RX(R)       			(R & USB_EP0R_DTOG_RX) ? R : (R & (~USB_EP0R_DTOG_RX))
-#define SET_DTOG_RX(R)         			(R & USB_EP0R_DTOG_RX) ? (R & (~USB_EP0R_DTOG_RX)) : (R | USB_EP0R_DTOG_RX)
-#define TOGGLE_DTOG_RX(R)      			(R | USB_EP0R_DTOG_RX)
-#define KEEP_DTOG_RX(R)        			(R & (~USB_EP0R_DTOG_RX))
-#define CLEAR_DTOG_TX(R)       			(R & USB_EP0R_DTOG_TX) ? R : (R & (~USB_EP0R_DTOG_TX))
-#define SET_DTOG_TX(R)         			(R & USB_EP0R_DTOG_TX) ? (R & (~USB_EP0R_DTOG_TX)) : (R | USB_EP0R_DTOG_TX)
-#define TOGGLE_DTOG_TX(R)      			(R | USB_EP0R_DTOG_TX)
-#define KEEP_DTOG_TX(R)        			(R & (~USB_EP0R_DTOG_TX))
-#define SET_VALID_RX(R)        			((R & USB_EP0R_STAT_RX) ^ USB_EP0R_STAT_RX)   | (R & (~USB_EP0R_STAT_RX))
-#define SET_NAK_RX(R)          			((R & USB_EP0R_STAT_RX) ^ USB_EP0R_STAT_RX_1) | (R & (~USB_EP0R_STAT_RX))
-#define SET_STALL_RX(R)        			((R & USB_EP0R_STAT_RX) ^ USB_EP0R_STAT_RX_0) | (R & (~USB_EP0R_STAT_RX))
-#define KEEP_STAT_RX(R)        			(R & (~USB_EP0R_STAT_RX))
-#define SET_VALID_TX(R)        			((R & USB_EP0R_STAT_TX) ^ USB_EP0R_STAT_TX)   | (R & (~USB_EP0R_STAT_TX))
-#define SET_NAK_TX(R)          			((R & USB_EP0R_STAT_TX) ^ USB_EP0R_STAT_TX_1) | (R & (~USB_EP0R_STAT_TX))
-#define SET_STALL_TX(R)        			((R & USB_EP0R_STAT_TX) ^ USB_EP0R_STAT_TX_0) | (R & (~USB_EP0R_STAT_TX))
-#define KEEP_STAT_TX(R)        			(R & (~USB_EP0R_STAT_TX))
-#define CLEAR_CTR_RX(R)       		 	(R & (~(USB_EP0R_CTR_RX | USB_EP0R_STAT_RX | USB_EP0R_STAT_TX | USB_EP0R_DTOG_RX | USB_EP0R_DTOG_TX)))
-#define CLEAR_CTR_TX(R)        			(R & (~(USB_EP0R_CTR_TX | USB_EP0R_STAT_RX | USB_EP0R_STAT_TX | USB_EP0R_DTOG_RX | USB_EP0R_DTOG_TX)))
-#define CLEAR_CTR_RX_TX(R)     			(R & (~(USB_EP0R_CTR_TX | USB_EP0R_CTR_RX | USB_EP0R_STAT_RX | USB_EP0R_STAT_TX | USB_EP0R_DTOG_RX | USB_EP0R_DTOG_TX)))
-
 extern "C" void USB_LP_CAN_RX0_IRQHandler();
 
 class Usb {
@@ -99,6 +79,10 @@ public:
     void clear_Tx (uint8_t num);
     void change_DTOG_Rx(uint8_t num);
     void change_DTOG_Tx(uint8_t num);
+    void set_DTOG_Tx(uint8_t num);
+    void set_DTOG_Rx(uint8_t num);
+    
+    uint16_t MIN(uint16_t len, uint16_t wLength);
 
 private:
     uint8_t receiveBuf[64]={0};

@@ -19,19 +19,26 @@ int main()
 	interruptButton.SetVector();
 
 	Usb usb;
+	//*((uint8_t*)(0x40005C00)) = 0x0820;
+	//usb.clear_Rx(0);
+	//usb.clear_Tx(0);
+	//usb.set_Tx_VALID(0);
+	//int y=0;
+
 	__enable_irq();	
 	while(1) {	
 		if (usb.endpoints[0].setup_flag && usb.endpoints[0].rx_flag ) {
 			usb.EnumerateSetup(0);
-			usb.set_Rx_VALID(0);
+			//usb.set_Rx_VALID(0);
 			usb.endpoints[0].setup_flag=false;			
 		} else if (usb.endpoints[0].rx_flag) {			
-			Uart::pThis->sendStr("Status");
+			//Uart::pThis->sendStr("Status");
 			if(usb.AddressFlag) {				
 				usb.setAddress();
 				usb.AddressFlag = false;
-			}
-			usb.epWaitNull(0);
+			}			
+			//usb.set_Rx_VALID(0);
+			usb.endpoints[0].rx_flag=false;
 		} else if (usb.endpoints[1].rx_flag) {
 
 		} else if (usb.endpoints[2].rx_flag) {

@@ -4,6 +4,7 @@ Usb* Usb::pThis = nullptr;
 
 Usb::Usb() {
     usb_init();
+    ep0_init();
     pThis = this;
 }
 
@@ -70,7 +71,7 @@ void Usb::EnumerateSetup(uint8_t num){
         case GET_DESCRIPTOR_DEVICE:        
         switch(swap16(setupPack->setup.wValue)) {        
             case USB_DESC_TYPE_DEVICE:   //Запрос дескриптора устройства
-            Uart::pThis->sendStr("DEVICE DESCRIPTER\n");            
+            Uart::pThis->sendStr("D_D\n");            
             len = sizeof(Device_Descriptor);
             pbuf = (uint8_t *)Device_Descriptor; // выставляем в буфер адрес массива с дескриптором устройства.
             break;
@@ -102,7 +103,7 @@ void Usb::EnumerateSetup(uint8_t num){
         }
         break;
         case SET_ADDRESS:  // Установка адреса устройства
-        Uart::pThis->sendStr("ADDRESS\n");
+        Uart::pThis->sendStr("ADr\n");
         address = setupPack->setup.wValue;
         Uart::pThis->sendByte(address);
         AddressFlag = true;            
@@ -144,27 +145,18 @@ void Usb::EnumerateSetup(uint8_t num){
         break;
         //stall();
     }   
-    EP_Write(0x00,pbuf,len);   // записываем в конечную точку адрес дескриптора и его размер (а также запрошенный размер)
+    EP_Write(0x00,pbuf,MIN(len,setupPack->setup.wLength));   // записываем в конечную точку адрес дескриптора и его размер (а также запрошенный размер)
+}
+
+uint16_t Usb::MIN(uint16_t len, uint16_t wLength)
+{
+    uint16_t x=0;
+    (len<wLength) ? x=len : x=wLength;
+    return x;
 }
 
 uint8_t Usb::setAddress() {
     USB_CR->DADDR |= address;
-}
-
-void Usb::epWaitNull(uint8_t number) {    
-    uint32_t timeout = 100000;
-    uint16_t status = USB_EP -> EPnR[number].value;
-    status = SET_VALID_RX(status);
-    status = KEEP_STAT_TX(status);
-    status = KEEP_DTOG_TX(status);
-    status = SET_DTOG_RX(status);
-    USB_EP -> EPnR[number].value = status;
-    endpoints[number].rx_flag = 0;
-    while (!endpoints[number].rx_flag){
-        if (timeout) timeout--;
-        else break;
-    }
-    endpoints[number].rx_flag = 0;
 }
 
 /*uint8_t number – номер конечной точки
@@ -175,7 +167,7 @@ void Usb::EP_Write(uint8_t number, uint8_t *buf, uint16_t size) {
     uint8_t i;
     uint32_t timeout = 100000;    
 //Ограничение на отправку данных больше 64 байт
-    if (size > 64) size = 64;
+    //if (size > 64) size = 64;
     /*!< передача 16 битных значений (записываем в буфер Tx) >*/
     uint16_t temp = (size & 0x0001) ? (size + 1) / 2 : size / 2;//если нечетный добавляем единицу
     uint16_t* buf16 = (uint16_t *)buf;
@@ -183,6 +175,7 @@ void Usb::EP_Write(uint8_t number, uint8_t *buf, uint16_t size) {
         endpoints[number].t_buf[i].tx = buf16[i];
     }
     //Количество передаваемых байт в регистр
+    USB_BTABLE -> EP[number].USB_COUNT_TX = 0;
     USB_BTABLE -> EP[number].USB_COUNT_TX = size;
     //STAT_RX, DTOG_TX, DTOG_RX – оставляем, STAT_TX=VALID
     //status = KEEP_STAT_RX(status);
@@ -192,14 +185,18 @@ void Usb::EP_Write(uint8_t number, uint8_t *buf, uint16_t size) {
     //status = KEEP_DTOG_RX(status);
     //Читаем EPnR
     //Uart::pThis->sendStr("write1\n");
-    uint16_t status = USB_EP -> EPnR[number].value;
+    //uint16_t status = USB_EP -> EPnR[number].value;
+    if(!size) {
+        set_DTOG_Tx(0);
+    }
     set_Tx_VALID(number);
     /*!< Ждем пока данные передадутся, в прерывании tx_flag установится в 1 >*/
-    endpoints[number].tx_flag = 0;
+    //endpoints[number].tx_flag = 0;
     //while (!endpoints[number].tx_flag){
     //    if (timeout) timeout--;
     //    else break;
-    //}    
+    //} 
+    //endpoints[0].tx_flag=false;     
     //Uart::pThis->sendStr("write2\n");
     //разрешаем прием    
 }
@@ -209,7 +206,7 @@ void USB_LP_CAN_RX0_IRQHandler() {
     if(USB_CR->ISTR & USB_ISTR_RESET) {
         Uart::pThis->sendStr("reset\n");        
         /*!Переинициализируем регистры*/
-        Usb::pThis->ep0_init();        
+        //Usb::pThis->ep0_init();        
         USB_CR->CNTR   = USB_CNTR_CTRM | USB_CNTR_RESETM;// | USB_CNTR_SUSPM;  
         /*!< обнуляем адрес устройства >*/
         USB_CR -> DADDR &=~ 0x7F;
@@ -220,7 +217,7 @@ void USB_LP_CAN_RX0_IRQHandler() {
         USB_EP -> EPnR[0].value |= USB_EP0R_EP_TYPE_0;
         USB_EP -> EPnR[0].value &=~ USB_EP0R_EP_TYPE_1; // 0:1 - control Ep
         USB_EP -> EPnR[0].value ^= (USB_EP0R_STAT_RX | USB_EP0R_STAT_TX_1); //Rx=1:1 - разрешена на прием(ACK) Tx=1:0 - NACK 
-        USB_CR->ISTR &= ~USB_ISTR_RESET;
+        USB_CR->ISTR =0;//&= ~USB_ISTR_RESET;
     }
     /*!< прерывание по приему >*/
     if (USB_CR -> ISTR & USB_ISTR_CTR) {         
@@ -236,10 +233,9 @@ void USB_LP_CAN_RX0_IRQHandler() {
 		Usb::pThis->endpoints[n].setup_flag = (Usb::pThis->endpoints[n].status & USB_EP0R_SETUP) ? 1 : 0;
         Usb::pThis->endpoints[n].tx_flag = (Usb::pThis->endpoints[n].status & USB_EP0R_CTR_TX) ? 1 : 0; //конец передачи
 		//Очищаем флаги приема и передачи
-        //Usb::pThis->endpoints[n].status = CLEAR_CTR_RX_TX(Usb::pThis->endpoints[n].status);
-		Usb::pThis->clear_Rx(n);
+        Usb::pThis->clear_Rx(n);
         Usb::pThis->clear_Tx(n);
-        USB_EP -> EPnR[n].value = Usb::pThis->endpoints[n].status;
+        //USB_EP -> EPnR[n].value = Usb::pThis->endpoints[n].status;
         USB_CR -> ISTR &=~ USB_ISTR_CTR;
         //USB_CR -> ISTR =0;
     }    
@@ -267,7 +263,6 @@ void Usb::set_Rx_VALID(uint8_t num) {
     void Usb::set_Tx_VALID(uint8_t num) {
         uint16_t status = USB_EP -> EPnR[num].value;
         status &=~ ((1<<6)| (7<<12));// обнуляем toggle
-        uint16_t x = status & USB_EP0R_STAT_TX;
         if((status & USB_EP0R_STAT_TX) == 0x0000) { //if cleared
             status |= USB_EP0R_STAT_TX;
             USB_EP -> EPnR[num].value = status;           
@@ -292,7 +287,7 @@ void Usb::set_Rx_VALID(uint8_t num) {
     void Usb::clear_Tx (uint8_t num) {
         uint16_t status = USB_EP -> EPnR[num].value;
         status &=~ ((7<<4)| (7<<12)); // обнуляем toggle
-        status &=~ (1<<6); //очищаем CTR_Tx
+        status &=~ (1<<7); //очищаем CTR_Tx
         USB_EP -> EPnR[num].value = status;
     }
     void Usb::change_DTOG_Rx(uint8_t num) {
@@ -306,4 +301,24 @@ void Usb::set_Rx_VALID(uint8_t num) {
         status &=~ ((7<<4)| (7<<12)); // обнуляем toggle
         status |= (1<<6); // записываем 1 в бит для дальнейшего переворота
         USB_EP -> EPnR[num].value = status;
+    }
+    void Usb::set_DTOG_Tx(uint8_t num) {
+        uint16_t status = USB_EP -> EPnR[num].value;
+        status &=~ ((7<<4)| (7<<12)); // обнуляем toggle
+        if(status & (USB_EP0R_DTOG_TX)){
+            return;
+        } else {
+            status |= (1<<6); // записываем 1 в бит для дальнейшего переворота
+            USB_EP -> EPnR[num].value = status;
+        }
+    }
+    void Usb::set_DTOG_Rx(uint8_t num) {
+        uint16_t status = USB_EP -> EPnR[num].value;
+        status &=~ ((7<<4)| (7<<12)); // обнуляем toggle
+        if(status & (USB_EP0R_DTOG_RX)){
+            return;
+        } else {
+            status |= (1<<14); // записываем 1 в бит для дальнейшего переворота
+            USB_EP -> EPnR[num].value = status;
+        }
     }
