@@ -97,7 +97,7 @@ constexpr uint8_t Device_Descriptor[18] =
 				0x01 /* bSlaveInterface0: Data Class Interface  - slave*/
 			},
 			{
-				/*Endpoint 3 IN Descriptor*/
+				/*Endpoint 1 IN Descriptor*/
 				0x07, /* bLength: Endpoint Descriptor size */
 				0x05, /* bDescriptorType: Endpoint */
 				0x81, /* bEndpointAddress IN  8-IN 1-endpoint1*/
@@ -123,7 +123,7 @@ constexpr uint8_t Device_Descriptor[18] =
 				/*Endpoint 1 Descriptor*/
 				0x07, /* bLength: Endpoint Descriptor size */
 				0x05, /* bDescriptorType: Endpoint */
-				0x83, /* bEndpointAddress IN1  8-IN 3-endpoint1*/
+				0x82, /* bEndpointAddress IN2  8-IN 2-endpoint2*/
 				0x02, /* bmAttributes: BULK */
 				64, /* wMaxPacketSize LO: */
 				0x00, /* wMaxPacketSize HI: */

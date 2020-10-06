@@ -174,6 +174,19 @@ uint8_t Usb::setAddress() {
 
 void Usb::setConfiguration() {
     //TODO: endpoint initialization !!!
+    /*!< Ep1 IN interrupt initialization >*/
+    USB_EP -> EPnR[1].value |= USB_EP0R_EP_TYPE_0;
+    USB_EP -> EPnR[1].value &=~ USB_EP0R_EP_TYPE_1; // 0:1 - control Ep
+    USB_EP -> EPnR[1].value ^= (USB_EP0R_STAT_TX_1); //Rx=0:0 - DISABLED Tx=1:0 - NACK
+    /*!< Ep2 IN BULK initialization >*/
+    USB_EP -> EPnR[2].value &=~ USB_EP0R_EP_TYPE_0;
+    USB_EP -> EPnR[2].value &=~ USB_EP0R_EP_TYPE_1; // 0:0 - BULK Ep
+    USB_EP -> EPnR[2].value ^= (USB_EP0R_STAT_TX_1); //Rx=0:0 - DISABLED Tx=1:0 - NACK
+    /*!< Ep3 OUT BULK initialization >*/
+    USB_EP -> EPnR[3].value &=~ USB_EP0R_EP_TYPE_0;
+    USB_EP -> EPnR[3].value &=~ USB_EP0R_EP_TYPE_1; // 0:0 - BULK Ep
+    USB_EP -> EPnR[3].value ^= (USB_EP0R_STAT_RX); //Rx=1:1 - разрешена на прием(ACK) Tx=0:0 - DISABLED
+
 }
 
 /*uint8_t number – номер конечной точки
@@ -228,11 +241,11 @@ void Usb::process() {
 			set_Rx_VALID(0);
 			endpoints[0].rx_flag=false;
 		} else if (endpoints[1].rx_flag) {
-
+            
 		} else if (endpoints[2].rx_flag) {
-
+            
 		} else if (endpoints[3].rx_flag) {
-
+            Uart::pThis->sendStr("Bulk arrived\n");            
 		}
 }
 
