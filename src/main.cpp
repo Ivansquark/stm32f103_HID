@@ -26,6 +26,8 @@ int main()
 	//int y=0;
 
 	__enable_irq();	
+	uint8_t arrToCDC[10]{0};
+	uint32_t x=0;
 	while(1) {	
 		usb.process();
 		if(uart1.wasInterruptedby1){
@@ -46,6 +48,13 @@ int main()
 				case 5: but.Button_case=6;spi2.sendWord(2500);pwm.setDuty(10);led.toggle();break;
 				case 6: but.Button_case=0;spi2.sendWord(3000);pwm.setDuty(10);led.toggle();break;
 				default:break;
+			}
+			if(usb.connected) {
+				arrToCDC[0] = x;
+				arrToCDC[1] = x>>8;
+				arrToCDC[2] = x>>16;
+				arrToCDC[3] = x>>24;
+				usb.EP_Write(2,arrToCDC,4);
 			}
 			but.ButtonFlag=false;
 		}		

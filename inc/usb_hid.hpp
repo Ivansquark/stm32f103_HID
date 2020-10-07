@@ -87,6 +87,8 @@ public:
     
     uint16_t MIN(uint16_t len, uint16_t wLength);
 
+    bool connected{false};
+
 private:
     uint8_t receiveBuf[64]={0};
 

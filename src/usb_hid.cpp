@@ -242,10 +242,11 @@ void Usb::process() {
 			endpoints[0].rx_flag=false;
 		} else if (endpoints[1].rx_flag) {
             
-		} else if (endpoints[2].rx_flag) {
+		} else if (endpoints[2].rx_flag) { //IN
             
-		} else if (endpoints[3].rx_flag) {
-            Uart::pThis->sendStr("Bulk arrived\n");            
+		} else if (endpoints[3].rx_flag) { //OUT
+            Uart::pThis->sendStr("Bulk arrived\n");  
+            connected = true;          
 		}
 }
 
