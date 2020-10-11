@@ -76,7 +76,7 @@ void Usb::EnumerateSetup(uint8_t num){
             pbuf = (uint8_t *)Device_Descriptor; // выставляем в буфер адрес массива с дескриптором устройства.
             break;
             case USB_DESC_TYPE_CONFIGURATION:   //Запрос дескриптора конфигурации
-            Uart::pThis->sendStr("CONFIGURATION DESCRIPTER\n");
+            Uart::pThis->sendStr("C_D\n");
             len = sizeof(confDescr);
             pbuf = (uint8_t *)&confDescr;
             break;		           
@@ -113,10 +113,8 @@ void Usb::EnumerateSetup(uint8_t num){
 		/*Устройство передает один байт, содержащий код конфигурации устройства*/
 		pbuf=(uint8_t*)&confDescr+5; //номер конфигурации (единственной)
 		len=1;//WriteINEP(0x00,pbuf,MIN(len , uSetReq.wLength));
-        //USART_debug::usart2_sendSTR("GET_CONFIGURATION\n");
-	    break;
+        break;
         case SET_CONFIGURATION: // Установка конфигурации устройства
-        Uart::pThis->sendStr("SET_CONFIGURATION\n");
         setConfiguration();
 	    break;       // len-0 -> ZLP
 	    case SET_INTERFACE: // Установка конфигурации устройства
@@ -125,12 +123,14 @@ void Usb::EnumerateSetup(uint8_t num){
 	    /* CDC Specific requests */
         case SET_LINE_CODING: //устанавливает параметры линии передач
         setLineCodingFlag=true;	
+        Uart::pThis->sendStr("SET_LINE_CODING\n");
         //cdc_set_line_coding();           
         break;
         case GET_LINE_CODING:
         //cdc_get_line_coding();           
         break;
         case SET_CONTROL_LINE_STATE:
+        Uart::pThis->sendStr("SET_CONTROL_LINE_STATE\n");
         //cdc_set_control_line_state();    
         break;
         case SEND_BREAK:
@@ -143,8 +143,10 @@ void Usb::EnumerateSetup(uint8_t num){
         //cdc_get_encapsulated_command();  
         break;
 	    case CLEAR_FEATURE_ENDP:
+        Uart::pThis->sendStr("CLEAR_FEATURE_ENDP\n");
 		break;	
 	    default: 
+        Uart::pThis->sendStr("default\n");
         break;
         //stall();
     }   
@@ -154,7 +156,7 @@ void Usb::EnumerateSetup(uint8_t num){
     } else {        
         EP_Write(0x00,pbuf, 64);
         bigSize = true;
-        set_Tx_VALID(0);
+        //set_Tx_VALID(0);
         EP_Write(0x00,pbuf, size-64);
         bigSize = false;
     }
@@ -168,8 +170,9 @@ uint16_t Usb::MIN(uint16_t len, uint16_t wLength)
     return x;
 }
 
-uint8_t Usb::setAddress() {
+void Usb::setAddress() {
     USB_CR->DADDR |= address;
+    Uart::pThis->sendStr("SA\n");
 }
 
 void Usb::setConfiguration() {
@@ -186,7 +189,7 @@ void Usb::setConfiguration() {
     USB_EP -> EPnR[3].value &=~ USB_EP0R_EP_TYPE_0;
     USB_EP -> EPnR[3].value &=~ USB_EP0R_EP_TYPE_1; // 0:0 - BULK Ep
     USB_EP -> EPnR[3].value ^= (USB_EP0R_STAT_RX); //Rx=1:1 - разрешена на прием(ACK) Tx=0:0 - DISABLED
-
+    Uart::pThis->sendStr("SET_CON\n");
 }
 
 /*uint8_t number – номер конечной точки
@@ -195,7 +198,7 @@ uint16_t size – длинна отправляемых данных
 */
 void Usb::EP_Write(uint8_t number, uint8_t *buf, uint16_t size) {
     uint8_t i;
-    uint32_t timeout = 10000000;    
+    uint32_t timeout = 1000000;    
 //Ограничение на отправку данных больше 64 байт
     //if (size > 64) size = 64;
     /*!< передача 16 битных значений (записываем в буфер Tx) >*/
@@ -203,6 +206,8 @@ void Usb::EP_Write(uint8_t number, uint8_t *buf, uint16_t size) {
     uint16_t* buf16 = nullptr;
     if(bigSize) {
         buf16 = (uint16_t *)((uint8_t*)buf+64);
+        Uart::pThis->sendStr("bigSize\n");
+        Uart::pThis->sendByte(size);
     } else {
         buf16 = (uint16_t *)buf;
     }    
@@ -232,20 +237,24 @@ void Usb::process() {
 		} else if (endpoints[0].rx_flag) {			
 			//Uart::pThis->sendStr("Status");
 			if(AddressFlag) {
-				uint8_t x;
+				uint8_t x=0;
 				//usb.set_DTOG_Tx(0);
-				EP_Write(0x00,&x,0);				
+				EP_Write(0x00,&x,0);	//ZLP			
 				setAddress();
 				AddressFlag = false;
 			}			
 			set_Rx_VALID(0);
 			endpoints[0].rx_flag=false;
 		} else if (endpoints[1].rx_flag) {
-            
+            Uart::pThis->sendStr("RX1\n");
+            set_Rx_VALID(1); 
 		} else if (endpoints[2].rx_flag) { //IN
-            
+            Uart::pThis->sendStr("RX2\n");
+            set_Rx_VALID(2); 
 		} else if (endpoints[3].rx_flag) { //OUT
-            Uart::pThis->sendStr("Bulk arrived\n");  
+            Uart::pThis->sendStr("Bulk arrived\n"); 
+            set_Rx_VALID(3); 
+            endpoints[3].rx_flag=false;
             connected = true;          
 		}
 }
@@ -267,7 +276,7 @@ void USB_LP_CAN_RX0_IRQHandler() {
         USB_EP -> EPnR[0].value |= USB_EP0R_EP_TYPE_0;
         USB_EP -> EPnR[0].value &=~ USB_EP0R_EP_TYPE_1; // 0:1 - control Ep
         USB_EP -> EPnR[0].value ^= (USB_EP0R_STAT_RX | USB_EP0R_STAT_TX_1); //Rx=1:1 - разрешена на прием(ACK) Tx=1:0 - NACK 
-        USB_CR->ISTR =0;//&= ~USB_ISTR_RESET;
+        USB_CR->ISTR = 0;//&= ~USB_ISTR_RESET;
     }
     /*!< прерывание по приему >*/
     if (USB_CR -> ISTR & USB_ISTR_CTR) {         
@@ -282,11 +291,9 @@ void USB_LP_CAN_RX0_IRQHandler() {
 		Usb::pThis->endpoints[n].rx_flag = (Usb::pThis->endpoints[n].status & USB_EP0R_CTR_RX) ? 1 : 0;
 		Usb::pThis->endpoints[n].setup_flag = (Usb::pThis->endpoints[n].status & USB_EP0R_SETUP) ? 1 : 0;
         Usb::pThis->endpoints[n].tx_flag = (Usb::pThis->endpoints[n].status & USB_EP0R_CTR_TX) ? 1 : 0; //конец передачи
-		
-        //Очищаем флаги приема и передачи
+		//Очищаем флаги приема и передачи
         Usb::pThis->clear_Rx(n);
         Usb::pThis->clear_Tx(n);
-        //USB_EP -> EPnR[n].value = Usb::pThis->endpoints[n].status;
         USB_CR -> ISTR &=~ USB_ISTR_CTR;
         //USB_CR -> ISTR =0;
     }    
@@ -295,7 +302,7 @@ void USB_LP_CAN_RX0_IRQHandler() {
 void Usb::set_Rx_VALID(uint8_t num) {
         uint16_t status = USB_EP -> EPnR[num].value;
         status &=~ ((1<<14)| (7<<4)); // обнуляем toggle
-        uint16_t x = status & USB_EP0R_STAT_RX;
+        //uint16_t x = status & USB_EP0R_STAT_RX;
         if((status & USB_EP0R_STAT_RX) == 0x0000) { //if cleared
             status |= USB_EP0R_STAT_RX;
             USB_EP -> EPnR[num].value = status;           

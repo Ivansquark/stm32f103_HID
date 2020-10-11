@@ -29,7 +29,8 @@ int main()
 	uint8_t arrToCDC[10]{0};
 	uint32_t x=0;
 	while(1) {	
-		usb.process();
+		/*!< обработка прерываний от USB >*/
+		usb.process(); 
 		if(uart1.wasInterruptedby1){
 			if(uart1.receivedArr[0] == 0xff) {
 				led.toggle();

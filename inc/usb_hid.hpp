@@ -72,7 +72,7 @@ public:
     void EP_Read(uint8_t number, uint8_t *buf);
     void ep0_init();
     static Usb* pThis;
-    uint8_t setAddress();
+    void setAddress();
     void setConfiguration();
     void epWaitNull(uint8_t number);
 
