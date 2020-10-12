@@ -80,22 +80,22 @@ void Usb::EnumerateSetup(uint8_t num){
             len = sizeof(confDescr);
             pbuf = (uint8_t *)&confDescr;
             break;		           
-            case USBD_IDX_LANGID_STR: //Запрос строкового дескриптора
+            case swap16(USBD_IDX_LANGID_STR): //Запрос строкового дескриптора
             Uart::pThis->sendStr("USBD_IDX_LANGID_STR\n");
             len = sizeof(LANG_ID_Descriptor);
             pbuf = (uint8_t *)LANG_ID_Descriptor;                   
             break;
-            case USBD_strManufacturer: //Запрос строкового дескриптора
+            case swap16(USBD_strManufacturer): //Запрос строкового дескриптора
             Uart::pThis->sendStr("USBD_strManufacturer\n");
             len = sizeof(Man_String);
             pbuf = (uint8_t *)Man_String;                             
             break;
-            case USBD_strProduct: //Запрос строкового дескриптора
+            case swap16(USBD_strProduct): //Запрос строкового дескриптора
             Uart::pThis->sendStr("USBD_strProduct\n");
             len = sizeof(Prod_String);
             pbuf = (uint8_t *)Prod_String;         
             break;                     
-            case USBD_IDX_SERIAL_STR: //Запрос строкового дескриптора
+            case swap16(USBD_IDX_SERIAL_STR): //Запрос строкового дескриптора
             Uart::pThis->sendStr("USBD_IDX_SERIAL_STR\n");
             len = sizeof(SN_String);
             pbuf = (uint8_t *)SN_String;    
@@ -119,6 +119,7 @@ void Usb::EnumerateSetup(uint8_t num){
 	    break;       // len-0 -> ZLP
 	    case SET_INTERFACE: // Установка конфигурации устройства
 	    /*<здесь выбирается интерфейс (в данном случае не должен выбираться, т.к. разные конечные точки)>*/
+        Uart::pThis->sendStr("SET_INTERFACE\n");
         break;	  	  
 	    /* CDC Specific requests */
         case SET_LINE_CODING: //устанавливает параметры линии передач
@@ -179,16 +180,19 @@ void Usb::setConfiguration() {
     //TODO: endpoint initialization !!!
     /*!< Ep1 IN interrupt initialization >*/
     USB_EP -> EPnR[1].value |= USB_EP0R_EP_TYPE_0;
-    USB_EP -> EPnR[1].value &=~ USB_EP0R_EP_TYPE_1; // 0:1 - control Ep
+    USB_EP -> EPnR[1].value |= USB_EP0R_EP_TYPE_1; // 1:1 - interrupt Ep
     USB_EP -> EPnR[1].value ^= (USB_EP0R_STAT_TX_1); //Rx=0:0 - DISABLED Tx=1:0 - NACK
     /*!< Ep2 IN BULK initialization >*/
-    USB_EP -> EPnR[2].value &=~ USB_EP0R_EP_TYPE_0;
-    USB_EP -> EPnR[2].value &=~ USB_EP0R_EP_TYPE_1; // 0:0 - BULK Ep
+    USB_EP -> EPnR[2].value = 0;
+    //USB_EP -> EPnR[2].value &=~ USB_EP0R_EP_TYPE_0;
+    //USB_EP -> EPnR[2].value &=~ USB_EP0R_EP_TYPE_1; // 0:0 - BULK Ep
     USB_EP -> EPnR[2].value ^= (USB_EP0R_STAT_TX_1); //Rx=0:0 - DISABLED Tx=1:0 - NACK
     /*!< Ep3 OUT BULK initialization >*/
-    USB_EP -> EPnR[3].value &=~ USB_EP0R_EP_TYPE_0;
-    USB_EP -> EPnR[3].value &=~ USB_EP0R_EP_TYPE_1; // 0:0 - BULK Ep
-    USB_EP -> EPnR[3].value ^= (USB_EP0R_STAT_RX); //Rx=1:1 - разрешена на прием(ACK) Tx=0:0 - DISABLED
+    USB_EP -> EPnR[3].value = 0;
+    //USB_EP -> EPnR[3].value &=~ USB_EP0R_EP_TYPE_0;
+    //USB_EP -> EPnR[3].value &=~ USB_EP0R_EP_TYPE_1; // 0:0 - BULK Ep
+    //USB_EP -> EPnR[3].value ^= (USB_EP0R_STAT_RX); //Rx=1:1 - разрешена на прием(ACK) Tx=0:0 - DISABLED
+    set_Rx_VALID(3);
     Uart::pThis->sendStr("SET_CON\n");
 }
 
@@ -208,6 +212,7 @@ void Usb::EP_Write(uint8_t number, uint8_t *buf, uint16_t size) {
         buf16 = (uint16_t *)((uint8_t*)buf+64);
         Uart::pThis->sendStr("bigSize\n");
         Uart::pThis->sendByte(size);
+        Uart::pThis->sendStr("bigSize\n");
     } else {
         buf16 = (uint16_t *)buf;
     }    
@@ -295,6 +300,7 @@ void USB_LP_CAN_RX0_IRQHandler() {
         Usb::pThis->clear_Rx(n);
         Usb::pThis->clear_Tx(n);
         USB_CR -> ISTR &=~ USB_ISTR_CTR;
+        Uart::pThis->sendByte(n);
         //USB_CR -> ISTR =0;
     }    
 }
