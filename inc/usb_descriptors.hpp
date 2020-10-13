@@ -24,12 +24,6 @@ constexpr uint8_t Device_Descriptor[18] =
     {
         const uint8_t Config_Descriptor[9];
         const uint8_t Interface_Descriptor1[9];
-        const uint8_t Header_Functional_Descriotor[5];
-        const uint8_t Call_Management_Functional_Descriptor[5];
-        const uint8_t ACM_Functional_Descriptor[4];
-        const uint8_t Union_Functional_Descriptor[5];
-        const uint8_t Ep2_Descriptor[7];
-        const uint8_t Interface_Descriptor2[9];
         const uint8_t EP1_In_Descriptor[7];
         const uint8_t EP1_OUT_Descriptor[7];
     }  confDescr =    
@@ -38,92 +32,32 @@ constexpr uint8_t Device_Descriptor[18] =
         {
             0x09, /* bLength: Configuration Descriptor size */
             0x02, /* bDescriptorType: Configuration */
-            67,   /* wTotalLength:no of retuinturned bytes */
+            32,   /* wTotalLength:no of retuinturned bytes */
             0x00,
-            0x02, /* bNumInterfaces: 2 interface */
+            0x01, /* bNumInterfaces: 1 interface */
             0x01, /* bConfigurationValue: Configuration value */
             0x00, /* iConfiguration: Index of string descriptor describing the configuration */
             0x80, /* bmAttributes - Bus powered 00 [6] 0-bus powered 1-no bus power [5] 0-no wakeup 1- wakeup */
             0x32 /* MaxPower 100 mA */
         },
-	/*!<Communication interface>*/    
-        /*Interface Descriptor master*/
-        {
-            0x09, /* bLength: Interface Descriptor size */
-            0x04, /* bDescriptorType: Interface */
-            0x00, /* bInterfaceNumber: Number of Interface */
-            0x00, /* bAlternateSetting: Alternate setting */
-            0x01, /* bNumEndpoints: One endpoints used */
-            0x02, /* bInterfaceClass: Communication Interface Class */
-            0x02, /* bInterfaceSubClass: Abstract Control Model */
-            0x01, /* bInterfaceProtocol: Common AT commands */
-            0x00 /* iInterface: */
-        },
-			/*!<header descriptor>*/
-			{
-				0x05, /* bLength: Endpoint Descriptor size */
-				0x24, /* bDescriptorType: CS_INTERFACE */
-				0x00, /* bDescriptorSubtype: Header Func Desc */
-				0x10, /* bcdCDC: spec release number */
-				0x01	
-			},
-			/*Call Management Functional Descriptor*/
-			{		    
-				/*!<Дескриптор режима команд, описывает процесс вызовов коммуникационного интерфейса.>*/
-				0x05, /* bFunctionLength */
-				0x24, /* bDescriptorType: CS_INTERFACE */
-				0x01, /* bDescriptorSubtype: Call Management Func Desc */
-				0x00, /* bmCapabilities: D0+D1 устройство принимает и передает команды только через коммуникационный интерфейс*/
-				0x01 /* bDataInterface: 1  number of interfaces (two interfaces)*/
-			},
-			/*ACM Functional Descriptor*/
-			{		
-				0x04, /* bFunctionLength */
-				0x24, /* bDescriptorType: CS_INTERFACE */
-				0x02, /* bDescriptorSubtype: Abstract Control Management desc */
-				0x02 /* bmCapabilities , битовая маска поддерживаемых команд*/
-				/*! x:x:x [2]-SendBreak [1]-Set_Line_Coding, Set_Control_Line_State, Get_Line_Coding,
-				Serial_State [0] - Set_Comm_Feature, Clear_Com_Feature, Get_Comm_Feature*/
-			},
-			/*Union Functional Descriptor*/
-			{
-				/*! Описывается отношение интерфейсов в группе. Один интерфейс Master, остальные Slave,
-				Запросы и нотификации проходящие через главный интерфейс, применяются ко всей
-				группе интерфейсов */		
-				0x05, /* bFunctionLength */
-				0x24, /* bDescriptorType: CS_INTERFACE */
-				0x06, /* bDescriptorSubtype: Union func desc */
-				0x00, /* bMasterInterface: Communication class interface - master*/
-				0x01 /* bSlaveInterface0: Data Class Interface  - slave*/
-			},
-			{
-				/*Endpoint 1 IN Descriptor*/
-				0x07, /* bLength: Endpoint Descriptor size */
-				0x05, /* bDescriptorType: Endpoint */
-				0x81, /* bEndpointAddress IN  8-IN 1-endpoint1*/
-				0x03, /* bmAttributes: Interrupt */
-				64, /* wMaxPacketSize LO: */
-				0x00, /* wMaxPacketSize HI: */
-				0x10, /* bInterval: */
-			},
-        /*!<Data interface>*/
+	/*!<Data interface>*/
         {
             /*Interface Descriptor slave interface*/
             0x09, /* bLength: Interface Descriptor size */
             0x04, /* bDescriptorType: Interface */
-            0x01, /* bInterfaceNumber: Number of Interface */
+            0x00, /* bInterfaceNumber: Number of Interface */
             0x00, /* bAlternateSetting: Alternate setting */
             0x02, /* bNumEndpoints: Two endpoints used */
             0x0A, /* bInterfaceClass: DATA Interface Class */
             0x02, /* bInterfaceSubClass: No class */
             0x00, /* bInterfaceProtocol: No special */
             0x00 /* iInterface: */
-        },
+        },		
 			{
 				/*Endpoint 1 Descriptor*/
 				0x07, /* bLength: Endpoint Descriptor size */
 				0x05, /* bDescriptorType: Endpoint */
-				0x82, /* bEndpointAddress IN2  8-IN 2-endpoint2*/
+				0x81, /* bEndpointAddress IN2  8-IN 1-endpoint2*/
 				0x02, /* bmAttributes: BULK */
 				64, /* wMaxPacketSize LO: */
 				0x00, /* wMaxPacketSize HI: */
@@ -133,7 +67,7 @@ constexpr uint8_t Device_Descriptor[18] =
 			{
 				0x07,   /*Endpoint descriptor length = 7 */
 				0x05,   /*Endpoint descriptor type */
-				0x03,   /*Endpoint address (0-OUT 3-endpoint1) */
+				0x01,   /*Endpoint address (0-OUT 1-endpoint1) */
 				0x02,   /*Interrupt endpoint type Interrupt 0x02 -BULK*/
 				64,
 				0x00,

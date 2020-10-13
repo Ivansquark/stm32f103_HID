@@ -60,7 +60,8 @@ void Usb::ep0_init() {
         endpoints[n].t_buf = (tx_buf*)((uint8_t*)0x40006080 + n*0x100);
         //Usb::pThis->endpoints[n].r_buf = (Usb::rx_buf*)((uint8_t*)0x40006100 + n*0x100); 
         //Usb::pThis->endpoints[n].t_buf = (Usb::tx_buf*)((uint8_t*)0x40006080 + n*0x100);
-    }     
+    }    
+    
 }
 
 void Usb::EnumerateSetup(uint8_t num){
@@ -81,7 +82,7 @@ void Usb::EnumerateSetup(uint8_t num){
             pbuf = (uint8_t *)&confDescr;
             break;		           
             case swap16(USBD_IDX_LANGID_STR): //Запрос строкового дескриптора
-            Uart::pThis->sendStr("USBD_IDX_LANGID_STR\n");
+            //Uart::pThis->sendStr("LAN\n");
             len = sizeof(LANG_ID_Descriptor);
             pbuf = (uint8_t *)LANG_ID_Descriptor;                   
             break;
@@ -160,8 +161,7 @@ void Usb::EnumerateSetup(uint8_t num){
         //set_Tx_VALID(0);
         EP_Write(0x00,pbuf, size-64);
         bigSize = false;
-    }
-    
+    }    
 }
 
 uint16_t Usb::MIN(uint16_t len, uint16_t wLength)
@@ -176,23 +176,7 @@ void Usb::setAddress() {
     Uart::pThis->sendStr("SA\n");
 }
 
-void Usb::setConfiguration() {
-    //TODO: endpoint initialization !!!
-    /*!< Ep1 IN interrupt initialization >*/
-    USB_EP -> EPnR[1].value |= USB_EP0R_EP_TYPE_0;
-    USB_EP -> EPnR[1].value |= USB_EP0R_EP_TYPE_1; // 1:1 - interrupt Ep
-    USB_EP -> EPnR[1].value ^= (USB_EP0R_STAT_TX_1); //Rx=0:0 - DISABLED Tx=1:0 - NACK
-    /*!< Ep2 IN BULK initialization >*/
-    USB_EP -> EPnR[2].value = 0;
-    //USB_EP -> EPnR[2].value &=~ USB_EP0R_EP_TYPE_0;
-    //USB_EP -> EPnR[2].value &=~ USB_EP0R_EP_TYPE_1; // 0:0 - BULK Ep
-    USB_EP -> EPnR[2].value ^= (USB_EP0R_STAT_TX_1); //Rx=0:0 - DISABLED Tx=1:0 - NACK
-    /*!< Ep3 OUT BULK initialization >*/
-    USB_EP -> EPnR[3].value = 0;
-    //USB_EP -> EPnR[3].value &=~ USB_EP0R_EP_TYPE_0;
-    //USB_EP -> EPnR[3].value &=~ USB_EP0R_EP_TYPE_1; // 0:0 - BULK Ep
-    //USB_EP -> EPnR[3].value ^= (USB_EP0R_STAT_RX); //Rx=1:1 - разрешена на прием(ACK) Tx=0:0 - DISABLED
-    set_Rx_VALID(3);
+void Usb::setConfiguration() {    
     Uart::pThis->sendStr("SET_CON\n");
 }
 
@@ -220,7 +204,7 @@ void Usb::EP_Write(uint8_t number, uint8_t *buf, uint16_t size) {
         endpoints[number].t_buf[i].tx = buf16[i];
     }
     //Количество передаваемых байт в регистр
-    USB_BTABLE -> EP[number].USB_COUNT_TX = 0;
+    //USB_BTABLE -> EP[number].USB_COUNT_TX = 0;
     USB_BTABLE -> EP[number].USB_COUNT_TX = size;
     set_Tx_VALID(number);
     /*!< Ждем пока данные передадутся, в прерывании tx_flag установится в 1 >*/
@@ -229,9 +213,6 @@ void Usb::EP_Write(uint8_t number, uint8_t *buf, uint16_t size) {
         if (timeout) timeout--;
         else break;
     } 
-    //endpoints[0].tx_flag=false;     
-    //Uart::pThis->sendStr("write2\n");
-    //разрешаем прием    
 }
 
 void Usb::process() {
@@ -251,7 +232,7 @@ void Usb::process() {
 			set_Rx_VALID(0);
 			endpoints[0].rx_flag=false;
 		} else if (endpoints[1].rx_flag) {
-            Uart::pThis->sendStr("RX1\n");
+            Uart::pThis->sendStr("Bulk arrived\n");
             set_Rx_VALID(1); 
 		} else if (endpoints[2].rx_flag) { //IN
             Uart::pThis->sendStr("RX2\n");
@@ -273,14 +254,18 @@ void USB_LP_CAN_RX0_IRQHandler() {
         USB_CR->CNTR   = USB_CNTR_CTRM | USB_CNTR_RESETM;// | USB_CNTR_SUSPM;  
         /*!< обнуляем адрес устройства >*/
         USB_CR -> DADDR &=~ 0x7F;
-        /*!< включаем устройство >*/
-		USB_CR -> DADDR = USB_DADDR_EF;  //enable function
-        //Записываем в USB_EPnR тип и номер конечной точки. Для упрощения номер конечной точки
-        //устанавливается равным  номеру USB_EPnR
-
+        //TODO: endpoint initialization !!!
         USB_EP -> EPnR[0].value |= USB_EP0R_EP_TYPE_0;
         USB_EP -> EPnR[0].value &=~ USB_EP0R_EP_TYPE_1; // 0:1 - control Ep
         USB_EP -> EPnR[0].value ^= (USB_EP0R_STAT_RX | USB_EP0R_STAT_TX_1); //Rx=1:1 - разрешена на прием(ACK) Tx=1:0 - NACK 
+        /*!< Ep1 IN and OUT BULK initialization >*/
+        USB_EP -> EPnR[1].value &= USB_EP0R_EP_TYPE_0;
+        USB_EP -> EPnR[1].value &= USB_EP0R_EP_TYPE_1; // 0:0 - BULK Ep
+        USB_EP -> EPnR[1].value ^= (USB_EP0R_STAT_RX_1| USB_EP0R_STAT_TX_1); //Rx=1:1 - VALID Tx=1:0 - NACK
+        /*!< включаем устройство >*/
+        USB_CR ->BTABLE=0;
+		USB_CR -> DADDR = USB_DADDR_EF;  //enable function
+        //Записываем в USB_EPnR тип и номер конечной точки. Для упрощения номер конечной точки        
         USB_CR->ISTR = 0;//&= ~USB_ISTR_RESET;
     }
     /*!< прерывание по приему >*/
@@ -299,9 +284,11 @@ void USB_LP_CAN_RX0_IRQHandler() {
 		//Очищаем флаги приема и передачи
         Usb::pThis->clear_Rx(n);
         Usb::pThis->clear_Tx(n);
-        USB_CR -> ISTR &=~ USB_ISTR_CTR;
-        Uart::pThis->sendByte(n);
-        //USB_CR -> ISTR =0;
+        //USB_CR -> ISTR &=~ USB_ISTR_CTR;
+        if(n==1) {
+            Uart::pThis->sendByte(n);
+        }
+        USB_CR -> ISTR =0;
     }    
 }
 
