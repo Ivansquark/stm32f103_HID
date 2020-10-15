@@ -68,7 +68,10 @@ void Usb::EnumerateSetup(uint8_t num){
     uint16_t len=0;
     uint8_t *pbuf;
     setupP* setupPack = (setupP*)(endpoints[num].r_buf);
-    switch(swap16(setupPack->wRequest)) {    
+    Uart::pThis->sendByte((setupPack->wRequest)>>8);
+    Uart::pThis->sendByte((setupPack->wRequest));
+    Uart::pThis->sendStr("\n");  
+    switch(swap16(setupPack->wRequest)) {            
         case GET_DESCRIPTOR_DEVICE:        
         switch(swap16(setupPack->setup.wValue)) {        
             case USB_DESC_TYPE_DEVICE:   //Запрос дескриптора устройства
@@ -80,7 +83,16 @@ void Usb::EnumerateSetup(uint8_t num){
             Uart::pThis->sendStr("C_D\n");
             len = sizeof(confDescr);
             pbuf = (uint8_t *)&confDescr;
-            break;		           
+            break;		
+            /*!<HID CLASS>*/
+            case GET_REPORT:
+            pbuf = (uint8_t *)HID_Report;
+            len=sizeof(HID_Report);
+            Uart::pThis->sendStr("GET_REPORT\n");
+            break;
+            case SET_REPORT:
+            Uart::pThis->sendStr("SET_REPORT\n");
+            break; 	  
             case swap16(USBD_IDX_LANGID_STR): //Запрос строкового дескриптора
             //Uart::pThis->sendStr("LAN\n");
             len = sizeof(LANG_ID_Descriptor);
@@ -118,10 +130,13 @@ void Usb::EnumerateSetup(uint8_t num){
         case SET_CONFIGURATION: // Установка конфигурации устройства
         setConfiguration();
 	    break;       // len-0 -> ZLP
+        case GET_DESCRIPTOR_INTERFACE:
+        Uart::pThis->sendStr("GET_DESCRIPTOR_INTERFACE\n");
+        break;
 	    case SET_INTERFACE: // Установка конфигурации устройства
 	    /*<здесь выбирается интерфейс (в данном случае не должен выбираться, т.к. разные конечные точки)>*/
         Uart::pThis->sendStr("SET_INTERFACE\n");
-        break;	  	  
+        break;	         
 	    /* CDC Specific requests */
         case SET_LINE_CODING: //устанавливает параметры линии передач
         setLineCodingFlag=true;	
@@ -141,9 +156,9 @@ void Usb::EnumerateSetup(uint8_t num){
         case SEND_ENCAPSULATED_COMMAND:
         //cdc_send_encapsulated_command(); 
         break;
-        case GET_ENCAPSULATED_RESPONSE:
+        //case GET_ENCAPSULATED_RESPONSE:
         //cdc_get_encapsulated_command();  
-        break;
+        //break;
 	    case CLEAR_FEATURE_ENDP:
         Uart::pThis->sendStr("CLEAR_FEATURE_ENDP\n");
 		break;	

@@ -7,13 +7,13 @@ constexpr uint8_t Device_Descriptor[18] =
         18, // size
         1, // USBGenericDescriptor_DEVICE
         0x00,0x02, // USBDeviceDescriptor_USB2_00
-        2, // CDCDeviceDescriptor_CLASS
-        0, // CDCDeviceDescriptor_SUBCLASS
-        0, // CDCDeviceDescriptor_PROTOCOL
+        0, // 
+        0, // 
+        0, // 
         64, // BOARD_USB_ENDPOINTS_MAXPACKETSIZE
-        0xEB,0x03, // CDCDSerialDriverDescriptors_VENDORID
-        0x24,0x61, // CDCDSerialDriverDescriptors_PRODUCTID
-        0x10,0x01, // CDCDSerialDriverDescriptors_RELEASE  bcdDevice (00 01)
+        0x83,0x04, // VENDORID
+        0x11,0x57, // PRODUCTID
+        0x00,0x02, // CDCDSerialDriverDescriptors_RELEASE  bcdDevice 2.0 (00 01)
         1, // Index of manufacturer description //0
         2, // Index of product description //0
         3, // Index of serial number description //0
@@ -24,6 +24,7 @@ constexpr uint8_t Device_Descriptor[18] =
     {
         const uint8_t Config_Descriptor[9];
         const uint8_t Interface_Descriptor1[9];
+        const uint8_t Hid_Descriptor[9];
         const uint8_t EP1_In_Descriptor[7];
         const uint8_t EP1_OUT_Descriptor[7];
     }  confDescr =    
@@ -32,13 +33,13 @@ constexpr uint8_t Device_Descriptor[18] =
         {
             0x09, /* bLength: Configuration Descriptor size */
             0x02, /* bDescriptorType: Configuration */
-            32,   /* wTotalLength:no of retuinturned bytes */
+            41,   /* wTotalLength:no of retuinturned bytes */
             0x00,
             0x01, /* bNumInterfaces: 1 interface */
             0x01, /* bConfigurationValue: Configuration value */
             0x00, /* iConfiguration: Index of string descriptor describing the configuration */
             0x80, /* bmAttributes - Bus powered 00 [6] 0-bus powered 1-no bus power [5] 0-no wakeup 1- wakeup */
-            0x32 /* MaxPower 100 mA */
+            0x32 /* MaxPower 100 mA 50*2 */
         },
 	/*!<Data interface>*/
         {
@@ -48,32 +49,89 @@ constexpr uint8_t Device_Descriptor[18] =
             0x00, /* bInterfaceNumber: Number of Interface */
             0x00, /* bAlternateSetting: Alternate setting */
             0x02, /* bNumEndpoints: Two endpoints used */
-            0x0A, /* bInterfaceClass: DATA Interface Class */
-            0x02, /* bInterfaceSubClass: No class */
+            0x03, /* bInterfaceClass: HID Interface Class */
+            0x00, /* bInterfaceSubClass: 1:BOOT 0:NO boot */
             0x00, /* bInterfaceProtocol: No special */
             0x00 /* iInterface: */
-        },		
+        },
+        /*! < HID descriptor > */		
+        {
+            0x09, //Length
+            0x21, //HID_DESCRIPTOR_TYPE
+            0x00, 
+            0x02, //HID 2.0
+            0x00, //country code
+            0x01, //count of report descriptors
+            0x22, //report descriptor type
+            84,   //report descriptor length
+            0x00
+        },
 			{
 				/*Endpoint 1 Descriptor*/
 				0x07, /* bLength: Endpoint Descriptor size */
 				0x05, /* bDescriptorType: Endpoint */
 				0x81, /* bEndpointAddress IN2  8-IN 1-endpoint2*/
-				0x02, /* bmAttributes: BULK */
+				0x03, /* bmAttributes: Interrupt */
 				64, /* wMaxPacketSize LO: */
 				0x00, /* wMaxPacketSize HI: */
-				0x01 /* bInterval: */
+				0x01 /* bInterval: 1ms*/
 			},
 			/*EP1_OUT_Descriptor[7]*/
 			{
 				0x07,   /*Endpoint descriptor length = 7 */
 				0x05,   /*Endpoint descriptor type */
 				0x01,   /*Endpoint address (0-OUT 1-endpoint1) */
-				0x02,   /*Interrupt endpoint type Interrupt 0x02 -BULK*/
+				0x03,   /*Interrupt endpoint type Interrupt 0x02 -BULK*/
 				64,
 				0x00,
 				0x01     /*Polling interval in milliseconds*/
 			}
     };		
+    const uint8_t HID_Report[] {
+        0x06, 0x00, 0xff, //USAGE PAGE (Vendor defined page)
+        0x09, 0x01,       //USAGE (Vendor Usage 1)                      // 7
+
+        0x85, 0x01,                    //   REPORT_ID (1)
+        0x09, 0x01,                    //   USAGE (Vendor Usage 1)
+        0x15, 0x00,                    //   LOGICAL_MINIMUM (0)
+        0x26, 0xff, 0x00,           //   LOGICAL_MAXIMUM (255)
+        0x75, 0x08,                    //   REPORT_SIZE (8)
+        0x95, 10,                       //   REPORT_COUNT (10)
+        0x85, 0x01,                    //   REPORT_ID (1)
+        0x09, 0x01,                    //   USAGE (Vendor Usage 1)
+        0x91, 0x02,                    //   OUTPUT (Data,Var,Abs)       // 26
+
+        0x85, 0x02,                    //   REPORT_ID (2)
+        0x09, 0x02,                    //   USAGE (Vendor Usage 2)
+        0x15, 0x00,                    //   LOGICAL_MINIMUM (0)
+        0x26, 0xff, 0x00,            //   LOGICAL_MAXIMUM (255)
+        0x75, 0x08,                    //   REPORT_SIZE (8)
+        0x95, 10,                        //   REPORT_COUNT (10)
+        0x85, 0x02,                    //   REPORT_ID (2)
+        0x09, 0x02,                    //   USAGE (Vendor Usage 2)
+        0x91, 0x02,                    //   OUTPUT (Data,Var,Abs)       // 45
+
+        0x85, 0x03,                    //   REPORT_ID (3)
+        0x09, 0x03,                    //   USAGE (Vendor Usage 3)
+        0x15, 0x00,                    //   LOGICAL_MINIMUM (0)
+        0x26, 0xff, 0x00,            //   LOGICAL_MAXIMUM (255)
+        0x75, 0x08,                    //   REPORT_SIZE (8)
+        0x95, 63,                        //   REPORT_COUNT (63)
+        0x85, 0x03,                    //   REPORT_ID (3)
+        0x09, 0x03,                    //   USAGE (Vendor Usage 3)
+        0x81, 0x02,                    //   INPUT (Data,Var,Abs)        // 64
+
+        0x85, 0x04,                    //   REPORT_ID (4)
+        0x09, 0x04,                    //   USAGE (Vendor Usage 4)
+        0x15, 0x00,                    //   LOGICAL_MINIMUM (0)
+        0x26, 0xff, 0x00,           //   LOGICAL_MAXIMUM (255)
+        0x75, 0x08,                    //   REPORT_SIZE (8)
+        0x95, 63,                        //   REPORT_COUNT (63)
+        0x85, 0x04,                    //   REPORT_ID (4)
+        0x09, 0x04,                    //   USAGE (Vendor Usage 4)
+        0x81, 0x02,                    //   INPUT (Data,Var,Abs)
+        0xc0                               // END_COLLECTION            // 84
+    };
 //---------------------------------------------------------------------------------------------------	
 	/*! <Всего 67 байт>*/	
 	constexpr uint8_t LANG_ID_Descriptor[4]
@@ -132,7 +190,7 @@ constexpr uint8_t Device_Descriptor[18] =
     static constexpr uint16_t GET_INTERFACE = 0x810A;
     static constexpr uint16_t SET_INTERFACE = 0x010B;
     static constexpr uint16_t SYNCH_FRAME = 0x820C;
-	static constexpr uint16_t GET_REPORT = 0xA101;
+	//static constexpr uint16_t GET_REPORT = 0xA101;
 	/*! <bmRequestType> */    
     static constexpr uint8_t STD_GET_STATUS = 0x00;
     static constexpr uint8_t STD_CLEAR_FEATURE = 0x01;
@@ -156,10 +214,14 @@ constexpr uint8_t Device_Descriptor[18] =
     static constexpr uint16_t USBD_strProduct = 0x0302;
     static constexpr uint16_t USBD_IDX_SERIAL_STR = 0x0303;
     //static constexpr uint16_t USBD_IDX_CONFIG_STR = 0x0304;
-	
+    
+    /*!< HID CLASS >*/
+	static constexpr uint16_t GET_REPORT = 0x22;
+    static constexpr uint16_t SET_REPORT = 0x23;
+
 	//<(bRequest<<8)|(bmRequestType)>
 	static constexpr uint16_t SEND_ENCAPSULATED_COMMAND = 0x2100; //посылка команды
-	static constexpr uint16_t GET_ENCAPSULATED_RESPONSE = 0xA101; // прием команды
+	//static constexpr uint16_t GET_ENCAPSULATED_RESPONSE = 0xA101; // прием команды
 	static constexpr uint16_t SET_LINE_CODING = 0x2120; //хост устанавливает параметры передачи данных
 	static constexpr uint16_t GET_LINE_CODING = 0xA121;	// хост узнает текущие настройки линии передачи
 	static constexpr uint16_t SET_CONTROL_LINE_STATE = 0x2122; // устанавливает состояние линии передачи (RTS[1] DTR[0])
