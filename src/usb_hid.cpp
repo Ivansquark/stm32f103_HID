@@ -70,10 +70,12 @@ void Usb::EnumerateSetup(uint8_t num){
     setupP* setupPack = (setupP*)(endpoints[num].r_buf);
     Uart::pThis->sendByte((setupPack->wRequest)>>8);
     Uart::pThis->sendByte((setupPack->wRequest));
-    Uart::pThis->sendStr("\n");  
+    //Uart::pThis->sendStr("\n");  
     switch(swap16(setupPack->wRequest)) {            
         case GET_DESCRIPTOR_DEVICE:        
-        switch(swap16(setupPack->setup.wValue)) {        
+        //Uart::pThis->sendByte((setupPack->setup.wValue)>>8);
+        //Uart::pThis->sendByte((setupPack->setup.wValue));
+        switch(swap16(setupPack->setup.wValue)) {      
             case USB_DESC_TYPE_DEVICE:   //Запрос дескриптора устройства
             Uart::pThis->sendStr("D_D\n");            
             len = sizeof(Device_Descriptor);
@@ -83,8 +85,13 @@ void Usb::EnumerateSetup(uint8_t num){
             Uart::pThis->sendStr("C_D\n");
             len = sizeof(confDescr);
             pbuf = (uint8_t *)&confDescr;
-            break;		
+            break;	   
             /*!<HID CLASS>*/
+            case GET_DESCRIPTOR_HID:
+            pbuf = (uint8_t *)(&confDescr)+18;
+            len=sizeof(9);
+            Uart::pThis->sendStr("GET_HID\n");
+            break;
             case GET_REPORT:
             pbuf = (uint8_t *)HID_Report;
             len=sizeof(HID_Report);
@@ -92,24 +99,24 @@ void Usb::EnumerateSetup(uint8_t num){
             break;
             case SET_REPORT:
             Uart::pThis->sendStr("SET_REPORT\n");
-            break; 	  
+            break; 	          
             case swap16(USBD_IDX_LANGID_STR): //Запрос строкового дескриптора
             //Uart::pThis->sendStr("LAN\n");
             len = sizeof(LANG_ID_Descriptor);
             pbuf = (uint8_t *)LANG_ID_Descriptor;                   
             break;
             case swap16(USBD_strManufacturer): //Запрос строкового дескриптора
-            Uart::pThis->sendStr("USBD_strManufacturer\n");
+            //Uart::pThis->sendStr("USBD_strManufacturer\n");
             len = sizeof(Man_String);
             pbuf = (uint8_t *)Man_String;                             
             break;
             case swap16(USBD_strProduct): //Запрос строкового дескриптора
-            Uart::pThis->sendStr("USBD_strProduct\n");
+            //Uart::pThis->sendStr("USBD_strProduct\n");
             len = sizeof(Prod_String);
             pbuf = (uint8_t *)Prod_String;         
             break;                     
             case swap16(USBD_IDX_SERIAL_STR): //Запрос строкового дескриптора
-            Uart::pThis->sendStr("USBD_IDX_SERIAL_STR\n");
+            //Uart::pThis->sendStr("USBD_IDX_SERIAL_STR\n");
             len = sizeof(SN_String);
             pbuf = (uint8_t *)SN_String;    
             break;        
@@ -121,7 +128,7 @@ void Usb::EnumerateSetup(uint8_t num){
         //Uart::pThis->sendByte(address);
         AddressFlag = true;   
         return;         
-        break;
+        break;        
 	    case GET_CONFIGURATION:
 		/*Устройство передает один байт, содержащий код конфигурации устройства*/
 		pbuf=(uint8_t*)&confDescr+5; //номер конфигурации (единственной)
@@ -130,8 +137,18 @@ void Usb::EnumerateSetup(uint8_t num){
         case SET_CONFIGURATION: // Установка конфигурации устройства
         setConfiguration();
 	    break;       // len-0 -> ZLP
-        case GET_DESCRIPTOR_INTERFACE:
-        Uart::pThis->sendStr("GET_DESCRIPTOR_INTERFACE\n");
+        case GET_DESCRIPTOR_INTERFACE: 
+            //Uart::pThis->sendStr("GET_DESCRIPTOR_INTERFACE\n");
+            //Uart::pThis->sendByte((setupPack->setup.wValue)>>8);
+            //Uart::pThis->sendByte((setupPack->setup.wValue));            
+            switch(swap16(setupPack->setup.wValue)) {      
+               case GET_REPORT:   //Запрос дескриптора устройства
+               //Uart::pThis->sendStr("D_D\n");            
+               len = sizeof(HID_Report);
+               pbuf = (uint8_t *)HID_Report; // выставляем в буфер адрес массива с дескриптором устройства.
+               break;
+        }
+            
         break;
 	    case SET_INTERFACE: // Установка конфигурации устройства
 	    /*<здесь выбирается интерфейс (в данном случае не должен выбираться, т.к. разные конечные точки)>*/
@@ -188,11 +205,11 @@ uint16_t Usb::MIN(uint16_t len, uint16_t wLength)
 
 void Usb::setAddress() {
     USB_CR->DADDR |= address;
-    Uart::pThis->sendStr("SA\n");
+    //Uart::pThis->sendStr("SA\n");
 }
 
 void Usb::setConfiguration() {    
-    Uart::pThis->sendStr("SET_CON\n");
+    //Uart::pThis->sendStr("SET_CON\n");
 }
 
 /*uint8_t number – номер конечной точки

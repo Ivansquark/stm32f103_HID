@@ -7,7 +7,7 @@ constexpr uint8_t Device_Descriptor[18] =
         18, // size
         1, // USBGenericDescriptor_DEVICE
         0x00,0x02, // USBDeviceDescriptor_USB2_00
-        0, // 
+        0, // description in interface
         0, // 
         0, // 
         64, // BOARD_USB_ENDPOINTS_MAXPACKETSIZE
@@ -23,13 +23,12 @@ constexpr uint8_t Device_Descriptor[18] =
     constexpr struct
     {
         const uint8_t Config_Descriptor[9];
-        const uint8_t Interface_Descriptor1[9];
-        const uint8_t Hid_Descriptor[9];
+        const uint8_t Interface_Descriptor1[9]; 
+        const uint8_t Hid_Descriptor[9];       
         const uint8_t EP1_In_Descriptor[7];
         const uint8_t EP1_OUT_Descriptor[7];
     }  confDescr =    
-    {
-        /*Configuration Descriptor*/
+    {        /*Configuration Descriptor*/
         {
             0x09, /* bLength: Configuration Descriptor size */
             0x02, /* bDescriptorType: Configuration */
@@ -41,7 +40,6 @@ constexpr uint8_t Device_Descriptor[18] =
             0x80, /* bmAttributes - Bus powered 00 [6] 0-bus powered 1-no bus power [5] 0-no wakeup 1- wakeup */
             0x32 /* MaxPower 100 mA 50*2 */
         },
-	/*!<Data interface>*/
         {
             /*Interface Descriptor slave interface*/
             0x09, /* bLength: Interface Descriptor size */
@@ -53,9 +51,9 @@ constexpr uint8_t Device_Descriptor[18] =
             0x00, /* bInterfaceSubClass: 1:BOOT 0:NO boot */
             0x00, /* bInterfaceProtocol: No special */
             0x00 /* iInterface: */
-        },
-        /*! < HID descriptor > */		
+        },      
         {
+            /*! < HID descriptor > */		
             0x09, //Length
             0x21, //HID_DESCRIPTOR_TYPE
             0x00, 
@@ -63,9 +61,9 @@ constexpr uint8_t Device_Descriptor[18] =
             0x00, //country code
             0x01, //count of report descriptors
             0x22, //report descriptor type
-            84,   //report descriptor length
+            82,   //report descriptor length
             0x00
-        },
+        },  
 			{
 				/*Endpoint 1 Descriptor*/
 				0x07, /* bLength: Endpoint Descriptor size */
@@ -87,6 +85,7 @@ constexpr uint8_t Device_Descriptor[18] =
 				0x01     /*Polling interval in milliseconds*/
 			}
     };		
+     
     const uint8_t HID_Report[] {
         0x06, 0x00, 0xff, //USAGE PAGE (Vendor defined page)
         0x09, 0x01,       //USAGE (Vendor Usage 1)                      // 7
@@ -207,7 +206,7 @@ constexpr uint8_t Device_Descriptor[18] =
     /*! <mValue> */
     static constexpr uint16_t USB_DESC_TYPE_DEVICE = 0x0001;
     static constexpr uint16_t USB_DESC_TYPE_CONFIGURATION = 0x0002;
-    //static constexpr uint16_t USB_DESC_TYPE_DEVICE_QUALIFIER = 0x0600;
+    static constexpr uint16_t USB_DESC_TYPE_DEVICE_QUALIFIER = 0x0600;
 	/*<В запросах на передачу дескриптора Value содержит в старшем байте тип дескриптора, а в младшем индекс>*/
     static constexpr uint16_t USBD_IDX_LANGID_STR = 0x0300;
     static constexpr uint16_t USBD_strManufacturer = 0x0301;
@@ -216,8 +215,9 @@ constexpr uint8_t Device_Descriptor[18] =
     //static constexpr uint16_t USBD_IDX_CONFIG_STR = 0x0304;
     
     /*!< HID CLASS >*/
-	static constexpr uint16_t GET_REPORT = 0x22;
-    static constexpr uint16_t SET_REPORT = 0x23;
+    static constexpr uint16_t GET_DESCRIPTOR_HID = 0x0021;
+	static constexpr uint16_t GET_REPORT = 0x0022;
+    static constexpr uint16_t SET_REPORT = 0x0023;
 
 	//<(bRequest<<8)|(bmRequestType)>
 	static constexpr uint16_t SEND_ENCAPSULATED_COMMAND = 0x2100; //посылка команды
