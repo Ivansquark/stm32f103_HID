@@ -68,8 +68,8 @@ void Usb::EnumerateSetup(uint8_t num){
     uint16_t len=0;
     uint8_t *pbuf;
     setupP* setupPack = (setupP*)(endpoints[num].r_buf);
-    Uart::pThis->sendByte((setupPack->wRequest)>>8);
-    Uart::pThis->sendByte((setupPack->wRequest));
+    //Uart::pThis->sendByte((setupPack->wRequest)>>8);
+    //Uart::pThis->sendByte((setupPack->wRequest));
     //Uart::pThis->sendStr("\n");  
     switch(swap16(setupPack->wRequest)) {            
         case GET_DESCRIPTOR_DEVICE:        
@@ -86,20 +86,6 @@ void Usb::EnumerateSetup(uint8_t num){
             len = sizeof(confDescr);
             pbuf = (uint8_t *)&confDescr;
             break;	   
-            /*!<HID CLASS>*/
-            case GET_DESCRIPTOR_HID:
-            pbuf = (uint8_t *)(&confDescr)+18;
-            len=sizeof(9);
-            Uart::pThis->sendStr("GET_HID\n");
-            break;
-            case GET_REPORT:
-            pbuf = (uint8_t *)HID_Report;
-            len=sizeof(HID_Report);
-            Uart::pThis->sendStr("GET_REPORT\n");
-            break;
-            case SET_REPORT:
-            Uart::pThis->sendStr("SET_REPORT\n");
-            break; 	          
             case swap16(USBD_IDX_LANGID_STR): //Запрос строкового дескриптора
             //Uart::pThis->sendStr("LAN\n");
             len = sizeof(LANG_ID_Descriptor);
@@ -143,7 +129,7 @@ void Usb::EnumerateSetup(uint8_t num){
             //Uart::pThis->sendByte((setupPack->setup.wValue));            
             switch(swap16(setupPack->setup.wValue)) {      
                case GET_REPORT:   //Запрос дескриптора устройства
-               //Uart::pThis->sendStr("D_D\n");            
+               Uart::pThis->sendStr("G_R\n");            
                len = sizeof(HID_Report);
                pbuf = (uint8_t *)HID_Report; // выставляем в буфер адрес массива с дескриптором устройства.
                break;
@@ -173,12 +159,12 @@ void Usb::EnumerateSetup(uint8_t num){
         case SEND_ENCAPSULATED_COMMAND:
         //cdc_send_encapsulated_command(); 
         break;
-        //case GET_ENCAPSULATED_RESPONSE:
-        //cdc_get_encapsulated_command();  
-        //break;
-	    case CLEAR_FEATURE_ENDP:
+        case CLEAR_FEATURE_ENDP:
         Uart::pThis->sendStr("CLEAR_FEATURE_ENDP\n");
 		break;	
+        case SET_IDLE:
+        Uart::pThis->sendStr("SET_IDLE\n");
+        break;
 	    default: 
         Uart::pThis->sendStr("default\n");
         break;
@@ -209,7 +195,7 @@ void Usb::setAddress() {
 }
 
 void Usb::setConfiguration() {    
-    //Uart::pThis->sendStr("SET_CON\n");
+    //Uart::pThis->sendStr("SET_CON\n");    
 }
 
 /*uint8_t number – номер конечной точки
@@ -264,7 +250,7 @@ void Usb::process() {
 			set_Rx_VALID(0);
 			endpoints[0].rx_flag=false;
 		} else if (endpoints[1].rx_flag) {
-            Uart::pThis->sendStr("Bulk arrived\n");
+            Uart::pThis->sendStr("INTERRUPT arrived\n");
             set_Rx_VALID(1); 
 		} else if (endpoints[2].rx_flag) { //IN
             Uart::pThis->sendStr("RX2\n");
@@ -289,10 +275,11 @@ void USB_LP_CAN_RX0_IRQHandler() {
         //TODO: endpoint initialization !!!
         USB_EP -> EPnR[0].value |= USB_EP0R_EP_TYPE_0;
         USB_EP -> EPnR[0].value &=~ USB_EP0R_EP_TYPE_1; // 0:1 - control Ep
-        USB_EP -> EPnR[0].value ^= (USB_EP0R_STAT_RX | USB_EP0R_STAT_TX_1); //Rx=1:1 - разрешена на прием(ACK) Tx=1:0 - NACK 
-        /*!< Ep1 IN and OUT BULK initialization >*/
-        USB_EP -> EPnR[1].value &= USB_EP0R_EP_TYPE_0;
-        USB_EP -> EPnR[1].value &= USB_EP0R_EP_TYPE_1; // 0:0 - BULK Ep
+        USB_EP -> EPnR[0].value ^= (USB_EP0R_STAT_RX | USB_EP0R_STAT_TX_1); //Rx=1:1 - разрешена на прием(ACK) Tx=1:0 - NACK         
+        
+        /*!< Ep1 IN and OUT INTERRUPT initialization >*/
+        USB_EP -> EPnR[1].value |= USB_EP0R_EP_TYPE_0;
+        USB_EP -> EPnR[1].value |= USB_EP0R_EP_TYPE_1; // 1:1 - INTERRUPT Ep
         USB_EP -> EPnR[1].value ^= (USB_EP0R_STAT_RX_1| USB_EP0R_STAT_TX_1); //Rx=1:1 - VALID Tx=1:0 - NACK
         /*!< включаем устройство >*/
         USB_CR ->BTABLE=0;
@@ -318,6 +305,7 @@ void USB_LP_CAN_RX0_IRQHandler() {
         Usb::pThis->clear_Tx(n);
         //USB_CR -> ISTR &=~ USB_ISTR_CTR;
         if(n==1) {
+            Uart::pThis->sendStr("INTERRUPT");
             Uart::pThis->sendByte(n);
         }
         USB_CR -> ISTR =0;
