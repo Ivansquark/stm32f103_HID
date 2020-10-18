@@ -61,7 +61,7 @@ void Usb::ep0_init() {
         //Usb::pThis->endpoints[n].r_buf = (Usb::rx_buf*)((uint8_t*)0x40006100 + n*0x100); 
         //Usb::pThis->endpoints[n].t_buf = (Usb::tx_buf*)((uint8_t*)0x40006080 + n*0x100);
     }    
-    
+    USB_CR -> DADDR = USB_DADDR_EF;  //enable function
 }
 
 void Usb::EnumerateSetup(uint8_t num){
@@ -77,12 +77,12 @@ void Usb::EnumerateSetup(uint8_t num){
         //Uart::pThis->sendByte((setupPack->setup.wValue));
         switch(swap16(setupPack->setup.wValue)) {      
             case USB_DESC_TYPE_DEVICE:   //Запрос дескриптора устройства
-            Uart::pThis->sendStr("D_D\n");            
+            //Uart::pThis->sendStr("D_D\n");            
             len = sizeof(Device_Descriptor);
             pbuf = (uint8_t *)Device_Descriptor; // выставляем в буфер адрес массива с дескриптором устройства.
             break;
             case USB_DESC_TYPE_CONFIGURATION:   //Запрос дескриптора конфигурации
-            Uart::pThis->sendStr("C_D\n");
+            //Uart::pThis->sendStr("C_D\n");
             len = sizeof(confDescr);
             pbuf = (uint8_t *)&confDescr;
             break;	   
@@ -128,10 +128,10 @@ void Usb::EnumerateSetup(uint8_t num){
             //Uart::pThis->sendByte((setupPack->setup.wValue)>>8);
             //Uart::pThis->sendByte((setupPack->setup.wValue));            
             switch(swap16(setupPack->setup.wValue)) {      
-               case GET_REPORT:   //Запрос дескриптора устройства
-               Uart::pThis->sendStr("G_R\n");            
+               case GET_REPORT:   //Запрос дескриптора устройства                       
                len = sizeof(HID_Report);
                pbuf = (uint8_t *)HID_Report; // выставляем в буфер адрес массива с дескриптором устройства.
+               Uart::pThis->sendStr("G_R\n");    
                break;
         }
             
@@ -273,17 +273,18 @@ void USB_LP_CAN_RX0_IRQHandler() {
         /*!< обнуляем адрес устройства >*/
         USB_CR -> DADDR &=~ 0x7F;
         //TODO: endpoint initialization !!!
+        USB_EP -> EPnR[0].value = 0;
+        USB_EP -> EPnR[1].value = 0;
         USB_EP -> EPnR[0].value |= USB_EP0R_EP_TYPE_0;
         USB_EP -> EPnR[0].value &=~ USB_EP0R_EP_TYPE_1; // 0:1 - control Ep
         USB_EP -> EPnR[0].value ^= (USB_EP0R_STAT_RX | USB_EP0R_STAT_TX_1); //Rx=1:1 - разрешена на прием(ACK) Tx=1:0 - NACK         
         
         /*!< Ep1 IN and OUT INTERRUPT initialization >*/
-        USB_EP -> EPnR[1].value |= USB_EP0R_EP_TYPE_0;
-        USB_EP -> EPnR[1].value |= USB_EP0R_EP_TYPE_1; // 1:1 - INTERRUPT Ep
-        USB_EP -> EPnR[1].value ^= (USB_EP0R_STAT_RX_1| USB_EP0R_STAT_TX_1); //Rx=1:1 - VALID Tx=1:0 - NACK
+        USB_EP -> EPnR[1].value |= USB_EP1R_EP_TYPE_0;
+        USB_EP -> EPnR[1].value |= USB_EP1R_EP_TYPE_1 | (1<<0); // 1:1 - INTERRUPT Ep
+        USB_EP -> EPnR[1].value ^= (USB_EP0R_STAT_RX | USB_EP0R_STAT_TX_1); //Rx=1:1 - VALID Tx=1:0 - NACK
         /*!< включаем устройство >*/
-        USB_CR ->BTABLE=0;
-		USB_CR -> DADDR = USB_DADDR_EF;  //enable function
+        USB_CR ->BTABLE=0;		
         //Записываем в USB_EPnR тип и номер конечной точки. Для упрощения номер конечной точки        
         USB_CR->ISTR = 0;//&= ~USB_ISTR_RESET;
     }

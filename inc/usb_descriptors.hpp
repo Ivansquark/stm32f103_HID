@@ -37,7 +37,7 @@ constexpr uint8_t Device_Descriptor[18] =
             0x01, /* bNumInterfaces: 1 interface */
             0x01, /* bConfigurationValue: Configuration value */
             0x00, /* iConfiguration: Index of string descriptor describing the configuration */
-            0x80, /* bmAttributes - C0 -self pow Bus powered 00 [6] 0-bus powered 1-no bus power [5] 0-no wakeup 1- wakeup */
+            0xE0, /* bmAttributes - C0 -self pow Bus powered 00 [6] 0-bus powered 1-no bus power [5] 0-no wakeup 1- wakeup */
             0x32 /* MaxPower 100 mA 50*2 */
         },
         {
@@ -100,7 +100,7 @@ constexpr uint8_t Device_Descriptor[18] =
             //0x25, 0x01,                  // LOGICAL_MAXIMUM (1)
             0x75, 0x08,                  // REPORT_SIZE (1) //размер 
             0x95, 0x01,                     // REPORT_COUNT (1) //передача одного байта
-            0x81, 0x02,                  // INPUT (Data,Variable, Absolute)        
+            0x81, 0x82,                  // INPUT (Data,Variable, Absolute)        
             /* USER CODE END 0 */
         0xC0 /* END_COLLECTION */
     };
