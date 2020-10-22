@@ -40,22 +40,33 @@ int main()
 		}
 		if(but.ButtonFlag==true) {
 			switch (but.Button_case) {
-				case 0: but.Button_case=1;HID_buf[0]=1;led.toggle();break;
-				case 1: but.Button_case=2;HID_buf[0]=0;led.toggle();break;
-				case 2: but.Button_case=3;HID_buf[0]=1;led.toggle();break;
-				case 3: but.Button_case=4;HID_buf[0]=0;led.toggle();break;
-				case 4: but.Button_case=5;HID_buf[0]=1;led.toggle();break;
-				case 5: but.Button_case=6;HID_buf[0]=0;led.toggle();break;
-				case 6: but.Button_case=0;HID_buf[0]=1;led.toggle();break;
+				case 0: but.Button_case=1;HID_buf[0]=1;//led.toggle();
+				break;
+				case 1: but.Button_case=2;HID_buf[0]=0;//led.toggle();
+				break;
+				case 2: but.Button_case=3;HID_buf[0]=1;//led.toggle();
+				break;
+				case 3: but.Button_case=4;HID_buf[0]=0;//led.toggle();
+				break;
+				case 4: but.Button_case=5;HID_buf[0]=1;//led.toggle();
+				break;
+				case 5: but.Button_case=6;HID_buf[0]=0;//led.toggle();
+				break;
+				case 6: but.Button_case=0;HID_buf[0]=1;//led.toggle();
+				break;
 				default:break;
 			}
 			usb.EP_Write(1,HID_buf,1);
-			Uart::pThis->sendStr("but");
-			if(usb.connected) {
-				HID_buf[0]=1;
-			}
+			Uart::pThis->sendStr("but");			
 			but.ButtonFlag=false;
 		}		
+		if(usb.connected) {				
+			if(usb.LedOn) {
+				led.ledOn();
+			} else {
+				led.ledOff();
+			}
+		}
 	}
 	return 0;
 }

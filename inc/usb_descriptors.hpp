@@ -32,7 +32,7 @@ constexpr uint8_t Device_Descriptor[18] =
         {
             0x09, /* bLength: Configuration Descriptor size */
             0x02, /* bDescriptorType: Configuration */
-            34,   /* wTotalLength:no of retuinturned bytes */
+            41,   /* wTotalLength:no of retuinturned bytes */
             0x00,
             0x01, /* bNumInterfaces: 1 interface */
             0x01, /* bConfigurationValue: Configuration value */
@@ -61,7 +61,7 @@ constexpr uint8_t Device_Descriptor[18] =
             0x00, //country code
             0x01, //count of report descriptors
             0x22, //report descriptor type
-            18,   //report descriptor length
+            28,   //report descriptor length
             0x00
         },  
 			{
@@ -73,17 +73,17 @@ constexpr uint8_t Device_Descriptor[18] =
 				64, /* wMaxPacketSize LO: */
 				0x00, /* wMaxPacketSize HI: */
 				0x20 /* bInterval: 1ms*/
-			}//,
+			},
 			/*EP1_OUT_Descriptor[7]*/
-			//{
-			//	0x07,   /*Endpoint descriptor length = 7 */
-			//	0x05,   /*Endpoint descriptor type */
-			//	0x01,   /*Endpoint address (0-OUT 1-endpoint1) */
-			//	0x03,   /*Interrupt endpoint type Interrupt 0x02 -BULK*/
-			//	64,
-			//	0x00,
-			//	0x01     /*Polling interval in milliseconds*/
-			//}
+			{
+				0x07,   /*Endpoint descriptor length = 7 */
+				0x05,   /*Endpoint descriptor type */
+				0x01,   /*Endpoint address (0-OUT 1-endpoint1) */
+				0x03,   /*Interrupt endpoint type Interrupt, 0x02 -BULK*/
+				64,
+				0x00,
+				0x20     /*Polling interval in milliseconds*/
+			}
     };		
      
     const uint8_t HID_Report[] {
@@ -100,7 +100,13 @@ constexpr uint8_t Device_Descriptor[18] =
             //0x25, 0x01,                  // LOGICAL_MAXIMUM (1)
             0x75, 0x08,                  // REPORT_SIZE (1) //размер 
             0x95, 0x01,                     // REPORT_COUNT (1) //передача одного байта
-            0x81, 0x82,                  // INPUT (Data,Variable, Absolute)        
+            0x81, 0x82,                  // INPUT (Data,Variable, Absolute)
+
+            0x85, 0x02,                  // REPORT_ID (2)
+            0x09, 0x01,                  // USAGE (Vendor Usage 1)   
+            0x75, 0x08,                  // REPORT_SIZE (1) //размер 
+            0x95, 0x01,                     // REPORT_COUNT (1) //передача одного байта
+            0x91, 0x82,                  // OUTPUT (Data,Variable, Absolute)     
             /* USER CODE END 0 */
         0xC0 /* END_COLLECTION */
     };

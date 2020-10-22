@@ -249,9 +249,12 @@ void Usb::process() {
 			}			
 			set_Rx_VALID(0);
 			endpoints[0].rx_flag=false;
-		} else if (endpoints[1].rx_flag) {
-            Uart::pThis->sendStr("INTERRUPT arrived\n");
+		} else if (endpoints[1].rx_flag) {            
+            if(ep[1].rx_cnt) {                
+                LedOn = ep[1].r_buf[0];
+            }            
             set_Rx_VALID(1); 
+            Uart::pThis->sendStr("INTERRUPT arrived\n");
 		} else if (endpoints[2].rx_flag) { //IN
             Uart::pThis->sendStr("RX2\n");
             set_Rx_VALID(2); 
