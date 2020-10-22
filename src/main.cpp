@@ -40,19 +40,19 @@ int main()
 		}
 		if(but.ButtonFlag==true) {
 			switch (but.Button_case) {
-				case 0: but.Button_case=1;HID_buf[0]=1;//led.toggle();
+				case 0: but.Button_case=1;HID_buf[0]=0;//led.toggle();
 				break;
-				case 1: but.Button_case=2;HID_buf[0]=0;//led.toggle();
+				case 1: but.Button_case=2;HID_buf[0]=1;//led.toggle();
 				break;
-				case 2: but.Button_case=3;HID_buf[0]=1;//led.toggle();
+				case 2: but.Button_case=3;HID_buf[0]=2;//led.toggle();
 				break;
-				case 3: but.Button_case=4;HID_buf[0]=0;//led.toggle();
+				case 3: but.Button_case=4;HID_buf[0]=3;//led.toggle();
 				break;
-				case 4: but.Button_case=5;HID_buf[0]=1;//led.toggle();
+				case 4: but.Button_case=5;HID_buf[0]=4;//led.toggle();
 				break;
-				case 5: but.Button_case=6;HID_buf[0]=0;//led.toggle();
+				case 5: but.Button_case=6;HID_buf[0]=5;//led.toggle();
 				break;
-				case 6: but.Button_case=0;HID_buf[0]=1;//led.toggle();
+				case 6: but.Button_case=0;HID_buf[0]=6;//led.toggle();
 				break;
 				default:break;
 			}

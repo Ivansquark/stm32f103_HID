@@ -26,7 +26,7 @@ constexpr uint8_t Device_Descriptor[18] =
         const uint8_t Interface_Descriptor1[9]; 
         const uint8_t Hid_Descriptor[9];       
         const uint8_t EP1_In_Descriptor[7];
-        //const uint8_t EP1_OUT_Descriptor[7];
+        const uint8_t EP1_OUT_Descriptor[7];
     }  confDescr =    
     {        /*Configuration Descriptor*/
         {
@@ -72,7 +72,7 @@ constexpr uint8_t Device_Descriptor[18] =
 				0x03, /* bmAttributes: Interrupt */
 				64, /* wMaxPacketSize LO: */
 				0x00, /* wMaxPacketSize HI: */
-				0x20 /* bInterval: 1ms*/
+				0x40 /* bInterval: 1ms*/
 			},
 			/*EP1_OUT_Descriptor[7]*/
 			{
@@ -82,7 +82,7 @@ constexpr uint8_t Device_Descriptor[18] =
 				0x03,   /*Interrupt endpoint type Interrupt, 0x02 -BULK*/
 				64,
 				0x00,
-				0x20     /*Polling interval in milliseconds*/
+				0x40     /*Polling interval in milliseconds*/
 			}
     };		
      

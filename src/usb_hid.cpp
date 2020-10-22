@@ -250,11 +250,12 @@ void Usb::process() {
 			set_Rx_VALID(0);
 			endpoints[0].rx_flag=false;
 		} else if (endpoints[1].rx_flag) {            
-            if(ep[1].rx_cnt) {                
-                LedOn = ep[1].r_buf[0];
+            if(endpoints[1].rx_cnt) {                
+                LedOn = *((uint8_t*)(endpoints[1].r_buf));
             }            
             set_Rx_VALID(1); 
             Uart::pThis->sendStr("INTERRUPT arrived\n");
+            endpoints[1].rx_flag=false;
 		} else if (endpoints[2].rx_flag) { //IN
             Uart::pThis->sendStr("RX2\n");
             set_Rx_VALID(2); 
@@ -310,7 +311,7 @@ void USB_LP_CAN_RX0_IRQHandler() {
         //USB_CR -> ISTR &=~ USB_ISTR_CTR;
         if(n==1) {
             Uart::pThis->sendStr("INTERRUPT");
-            Uart::pThis->sendByte(n);
+            //Uart::pThis->sendByte(n);
         }
         USB_CR -> ISTR =0;
     }    
