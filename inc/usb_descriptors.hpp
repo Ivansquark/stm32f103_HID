@@ -61,7 +61,7 @@ constexpr uint8_t Device_Descriptor[18] =
             0x00, //country code
             0x01, //count of report descriptors
             0x22, //report descriptor type
-            32,   //report descriptor length
+            38,   //report descriptor length
             0x00
         },  
 			{
@@ -87,28 +87,28 @@ constexpr uint8_t Device_Descriptor[18] =
     };		
      
     const uint8_t HID_Report[] {
-            /* USER CODE BEGIN 0 */ 
-        0x06, 0x00, 0xff,            // USAGE_PAGE (Generic Desktop)
-        0x09, 0x01,                  // USAGE (Vendor Usage 1)        
-        // System Parameters
-        0xa1, 0x01,                  // COLLECTION (Application)
-            0x85, 0x01,                  // REPORT_ID (1)
-            0x09, 0x01,                  // USAGE (Vendor Usage 1)
-            //0x19, 0x01,                  // USAGE MINIMUM (Vendor Usage 1)
-            //0x29, 0x01,                  // USAGE MAXIMUM (Vendor Usage 1)
-            0x15, 0x00,                  // LOGICAL_MINIMUM (0)
-            0x25, 0x08,                  // LOGICAL_MAXIMUM (8)
-            0x75, 0x08,                  // REPORT_SIZE (1) //размер 
-            0x95, 0x08,                     // REPORT_COUNT (1) //передача одного байта
-            0x81, 0x82,                  // INPUT (Data,Variable, Absolute)
+        0x06, 0x00, 0xff,              // USAGE_PAGE (Generic Desktop)
+            0x09, 0x01,                    // USAGE (Vendor Usage 1)
+            0xa1, 0x01,                    // COLLECTION (Application)
 
-            0x85, 0x02,                  // REPORT_ID (2)
-            0x09, 0x01,                  // USAGE (Vendor Usage 1)   
-            0x75, 0x08,                  // REPORT_SIZE (1) //размер 
-            0x95, 0x08,                     // REPORT_COUNT (1) //передача одного байта
-            0x91, 0x82,                  // OUTPUT (Data,Variable, Absolute)     
-            /* USER CODE END 0 */
-        0xC0 /* END_COLLECTION */
+            0x85, 0x01,                    //   REPORT_ID (1)
+            0x09, 0x01,                    //   USAGE (Vendor Usage 1)
+            0x75, 0x08,                    //   REPORT_SIZE (8)
+            0x95, 0x01,                    //   REPORT_COUNT (1)
+            0x91, 0x82,                    //   OUTPUT (Data,Var,Abs,Vol)
+
+            0x85, 0x02,                    //   REPORT_ID (2)
+            0x09, 0x02,                    //   USAGE (Vendor Usage 2)
+            0x75, 0x08,                    //   REPORT_SIZE (8)
+            0x95, 0x03,                    //   REPORT_COUNT (4)
+            0x81, 0x82,                    //   INPUT (Data,Var,Abs,Vol)
+
+            0x85, 0x03,                    //   REPORT_ID (3)
+            0x09, 0x03,                    //   USAGE (Vendor Usage 3)
+            0x75, 0x08,                    //   REPORT_SIZE (8)  размер элемента в битах
+            0x95, 0x04,                    //   REPORT_COUNT (4)  число полей данных в репорте   4 элемента по 8 бит
+            0x81, 0x82,                    //   INPUT (Data,Var,Abs,Vol) данные, по одному биту, абсолютные значения (не мышь)
+        0xC0						 //   END_COLLECTION	             
     };
 //---------------------------------------------------------------------------------------------------	
 	/*! <Всего 67 байт>*/	

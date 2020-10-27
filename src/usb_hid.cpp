@@ -251,11 +251,12 @@ void Usb::process() {
 			endpoints[0].rx_flag=false;
 		} else if (endpoints[1].rx_flag) {            
             if(endpoints[1].rx_cnt) {                
-                LedOn = *((uint8_t*)(endpoints[1].r_buf));
+                LedOn = *((uint8_t*)(endpoints[1].r_buf + 1));
             }            
             set_Rx_VALID(1); 
             Uart::pThis->sendStr("INTERRUPT arrived\n");
             endpoints[1].rx_flag=false;
+            connected = true;
 		} else if (endpoints[2].rx_flag) { //IN
             Uart::pThis->sendStr("RX2\n");
             set_Rx_VALID(2); 

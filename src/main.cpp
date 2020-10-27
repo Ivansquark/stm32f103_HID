@@ -26,7 +26,7 @@ int main()
 	//int y=0;
 
 	__enable_irq();	
-	uint8_t HID_buf[1];
+	uint8_t HID_buf[4]={0};
 	while(1) {	
 		/*!< обработка прерываний от USB >*/
 		usb.process(); 
@@ -38,25 +38,26 @@ int main()
 			uart1.sendByte(uart1.receivedArr[0]);
 			uart1.wasInterruptedby1=false;
 		}
+		HID_buf[0]=3;
 		if(but.ButtonFlag==true) {
 			switch (but.Button_case) {
-				case 0: but.Button_case=1;HID_buf[0]=0;//led.toggle();
+				case 0: but.Button_case=1;HID_buf[1]=0;//led.toggle();
 				break;
-				case 1: but.Button_case=2;HID_buf[0]=1;//led.toggle();
+				case 1: but.Button_case=2;HID_buf[2]=1;//led.toggle();
 				break;
-				case 2: but.Button_case=3;HID_buf[0]=2;//led.toggle();
+				case 2: but.Button_case=3;HID_buf[3]=2;//led.toggle();
 				break;
-				case 3: but.Button_case=4;HID_buf[0]=3;//led.toggle();
+				case 3: but.Button_case=4;HID_buf[1]=3;//led.toggle();
 				break;
-				case 4: but.Button_case=5;HID_buf[0]=4;//led.toggle();
+				case 4: but.Button_case=5;HID_buf[2]=4;//led.toggle();
 				break;
-				case 5: but.Button_case=6;HID_buf[0]=5;//led.toggle();
+				case 5: but.Button_case=6;HID_buf[3]=5;//led.toggle();
 				break;
-				case 6: but.Button_case=0;HID_buf[0]=6;//led.toggle();
+				case 6: but.Button_case=0;HID_buf[1]=6;//led.toggle();
 				break;
 				default:break;
 			}
-			usb.EP_Write(1,HID_buf,1);
+			usb.EP_Write(1,HID_buf,4);
 			Uart::pThis->sendStr("but");			
 			but.ButtonFlag=false;
 		}		
