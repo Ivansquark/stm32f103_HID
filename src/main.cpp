@@ -58,7 +58,7 @@ int main()
 				default:break;
 			}
 			usb.EP_Write(1,HID_buf,4);
-			Uart::pThis->sendStr("but");			
+			Uart::pThis->sendStr("b");			
 			but.ButtonFlag=false;
 		}		
 		if(usb.connected) {				
